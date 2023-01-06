@@ -22,13 +22,20 @@ def main_page():
 @app.route("/api/<queue_name>", methods=["GET", "POST"])
 def messages_of_queue(queue_name):
     if queue_name == dq_name(queue_name) or queue_name == xq_name(queue_name):
-        return {"status": "please enter the current queue name"}
+        return {"Status": "Please enter the current queue name"}
     return broker.get_messages_of_queue(queue_name)
 
 
-@app.route("/api/<queue_name>/<message_id>", methods=["GET", "POST"])
+@app.route("/api/requeue/<queue_name>/<message_id>", methods=["GET", "POST"])
 def requeue_msg(queue_name, message_id):
+    if queue_name == q_name(queue_name):
+        return {"Status": "Please enter a delay or dead queue name"}
     return broker.requeue_msg(queue_name, q_name(queue_name), message_id)
+
+
+@app.route("/api/delete/<queue_name>/<message_id>", methods=["GET", "DELETE"])
+def delete_msg(queue_name, message_id):
+    return broker.delete_msg(queue_name, message_id)
 
 
 if __name__ == "__main__":
