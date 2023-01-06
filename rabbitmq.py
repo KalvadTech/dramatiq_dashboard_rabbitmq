@@ -124,7 +124,7 @@ class Rabbitmq:
                     exchange="", routing_key=destination_queue, body=body
                 )
                 # to exit out of the for loop
-                i *= 100
+                i = msg_count.method.message_count + 1
 
         # requeue all outstanding messages
         channel.basic_nack(0, multiple=True, requeue=True)
