@@ -6,15 +6,24 @@ from loguru import logger
 
 
 class Rabbitmq:
-    def __init__(self, base_url, rabbit_user, rabbit_pass, vhost):
+    def __init__(self, base_url, rabbit_user, rabbit_pass, vhost, host, port):
+        """Interacts with the RabbitMQ management RESTful API and pika
+        to track and manage the queues and messages used by dramatiq
+
+        Args:
+            base_url (str): The url of the RabbitMQ management RESTful API
+            rabbit_user (str): The RabbitMQ username
+            rabbit_pass (str): The RabbitMQ password
+            vhost (str): The vhost name
+            host (str): The host name
+            port (int): The port number
+        """
         self.base_url = base_url
-        self.rabbit_user = rabbit_user
-        self.rabbit_pass = rabbit_pass
         self.auth = (rabbit_user, rabbit_pass)
         self.vhost = vhost
-        self.credentials = pika.PlainCredentials(self.rabbit_user, self.rabbit_pass)
+        self.credentials = pika.PlainCredentials(rabbit_user, rabbit_pass)
         self.parameters = pika.ConnectionParameters(
-            "localhost", 5672, self.vhost, self.credentials
+            host, port, self.vhost, self.credentials
         )
 
     def get_all_queues(self):
@@ -76,7 +85,7 @@ class Rabbitmq:
         Returns:
             dict: All of the messages inside the queues
         """
-        # Get the number of messages in each queue
+        # Get the messages in each queue
         current_queue = self.get_queue(queue_name)
         delay_queue = self.get_queue(dq_name(queue_name))
         dead_queue = self.get_queue(xq_name(queue_name))
@@ -112,7 +121,6 @@ class Rabbitmq:
             # Get a message from the source queue
             method_frame, header_frame, body = channel.basic_get(source_queue)
             body_json = json.loads(body)
-            logger.debug(body)
             # If the body has the same message_id as the given id then move it to the destination_queue
             if body_json["message_id"] == message_id:
                 # Change queue name to destination_queue, and eta to current UNIX time and returns it to the body

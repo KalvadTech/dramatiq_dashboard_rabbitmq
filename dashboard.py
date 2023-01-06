@@ -2,14 +2,20 @@ from flask import Flask
 import os
 from rabbitmq import Rabbitmq
 from dramatiq.common import dq_name, q_name, xq_name
+import config
 
-base_url = os.environ.get("BASE_URL", "")
-rabbit_user = os.environ.get("RABBIT_USER", "")
-rabbit_pass = os.environ.get("RABBIT_PASS", "")
-vhost = os.environ.get("VHOST", "")
+conf = config.Config()
+
+BASE_URL = os.environ.get("BASE_URL", "")
+RABBIT_USER = os.environ.get("RABBIT_USER", "")
+RABBIT_PASS = os.environ.get("RABBIT_PASS", "")
+VHOST = os.environ.get("VHOST", "")
+DEBUG = os.environ.get("DEBUG", "true").lower() == "true"
+HOST = os.environ.get("HOST", conf.localhost)
+PORT = os.environ.get("PORT", conf.port)
 
 
-broker = Rabbitmq(base_url, rabbit_user, rabbit_pass, vhost)
+broker = Rabbitmq(BASE_URL, RABBIT_USER, RABBIT_PASS, VHOST, HOST, PORT)
 
 app = Flask(__name__)
 
@@ -19,7 +25,9 @@ def main_page():
     return broker.get_all_queues()
 
 
-@app.route("/api/<queue_name>", methods=["GET", "POST"])
+@app.route(
+    "/api/<queue_name>", methods=["GET", "POST"]
+)  # TODO change so that it uses only its required method only using get so that i test it using the browser
 def messages_of_queue(queue_name):
     if queue_name == dq_name(queue_name) or queue_name == xq_name(queue_name):
         return {"Status": "Please enter the current queue name"}
@@ -39,5 +47,4 @@ def delete_msg(queue_name, message_id):
 
 
 if __name__ == "__main__":
-    DEBUG = os.environ.get("DEBUG", "true").lower() == "true"
     app.run(debug=DEBUG)
