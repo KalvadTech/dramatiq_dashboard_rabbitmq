@@ -95,7 +95,6 @@ class Rabbitmq:
             "delay_queue_msg": delay_queue,
             "dead_queue": dead_queue,
         }
-
         return queue
 
     def requeue_msg(self, source_queue, destination_queue, message_id):
