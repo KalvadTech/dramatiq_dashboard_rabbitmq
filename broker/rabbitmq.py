@@ -70,9 +70,9 @@ class Rabbitmq:
                 all_msg_dead += dead_queue["messages"]
 
         # Update the overall counters
-        dict_of_queues.update({"all messages in queues": all_msg_current})
-        dict_of_queues.update({"all messages in delay queues": all_msg_delay})
-        dict_of_queues.update({"all messages in dead letter queues": all_msg_dead})
+        dict_of_queues.update({"all_messages_in_queues": all_msg_current})
+        dict_of_queues.update({"all_messages_in_delay_queues": all_msg_delay})
+        dict_of_queues.update({"all_messages_in_dead_letter_queues": all_msg_dead})
 
         return dict_of_queues
 
@@ -97,14 +97,35 @@ class Rabbitmq:
         }
         return queue
 
+    def get_message_details(self, queue_name, message_id):
+        """Gets the details of a specfic message
+
+        Args:
+            queue_name (str): The name of the queue
+            message_id (str): The id of the message as given by dramatiq
+
+        Returns:
+            dict: the detail of the specfic message
+        """
+        # Get the messages in queue
+        messages = self.get_queue(queue_name)
+
+        # look for the message inside the queue and return it if found
+        for message in messages:
+            message_json = json.loads(message["payload"])
+            if message_json["message_id"] == message_id:
+                return message_json
+
+        return {
+            "status": f"messages with ID '{message_id}' was not found in queue '{queue_name}'"
+        }
+
     def requeue_msg(self, source_queue, destination_queue, message_id):
         """Moves one messages from one queue to another
-
         Args:
             source_queue (str): The queue to remove the messages from
             destination_queue (str): The queue to add the messages to
             message_id (str): The id of the message as given by dramatiq
-
         Returns:
             dict: Msessage telling us that it finished processing
         """
@@ -115,6 +136,10 @@ class Rabbitmq:
         # Declare the source and destination queues
         msg_count = channel.queue_declare(queue=source_queue, passive=True)
         channel.queue_declare(queue=destination_queue, passive=True)
+
+        status = {
+            "status": f"Error while moving message '{message_id}' from '{source_queue}' to '{destination_queue}'"
+        }
 
         for i in range(msg_count.method.message_count):
             # Get a message from the source queue
@@ -133,6 +158,10 @@ class Rabbitmq:
                 # Delete the message of the source queue
                 channel.basic_ack(method_frame.delivery_tag)
 
+                status = {
+                    "status": f"Moved message '{message_id}' from '{source_queue}' to '{destination_queue}'"
+                }
+
                 # To exit out of the for loop
                 i = msg_count.method.message_count + 1
 
@@ -141,18 +170,13 @@ class Rabbitmq:
 
         # Close the connection
         connection.close()
-        return {
-            "status": f"Moved message '{message_id}' from '{source_queue}' to '{destination_queue}'"
-        }
+        return status
 
     def delete_msg(self, queue_name, message_id):
         """Delete one messages from one queue
-
-
         Args:
             queue_name (str): The queue to remove the messages from
             message_id (str): The id of the message as given by dramatiq
-
         Returns:
             Dict: Msessages telling us that it finished processing
         """
@@ -163,14 +187,20 @@ class Rabbitmq:
         # Declare the queue
         msg_count = channel.queue_declare(queue=queue_name, passive=True)
 
+        status = {
+            "status": f"Error while Deleting message '{message_id}' from '{queue_name}'"
+        }
+
         for i in range(msg_count.method.message_count):
             # Get a message from queue
             method_frame, header_frame, body = channel.basic_get(queue_name)
             body_json = json.loads(body)
-            logger.debug(body)
             # If the body has the same message_id as the given id then delete the msg
             if body_json["message_id"] == message_id:
                 channel.basic_ack(method_frame.delivery_tag)
+                status = {
+                    "Status": f"Deleted message '{message_id}' from '{queue_name}'"
+                }
                 i = msg_count.method.message_count + 1
 
         # Requeue all outstanding messages
@@ -178,7 +208,7 @@ class Rabbitmq:
 
         # Close the connection
         connection.close()
-        return {"Status": f"Deleted message '{message_id}' from '{queue_name}'"}
+        return status
 
     def get_queue(self, queue_name):
         """Gets all the messages from a specfic queue
