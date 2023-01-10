@@ -1,12 +1,12 @@
-from flask import render_template, request
+from flask import render_template, request, redirect
 import requests
 from broker.rabbitmq import Rabbitmq
 from dramatiq.common import dq_name, q_name, xq_name
 import configuration.config as config
-
 from flask_openapi3 import Info, Tag
 from flask_openapi3 import OpenAPI, APIBlueprint
 from pydantic import BaseModel, Field
+from loguru import logger
 
 
 info = Info(title="dramatiq dashboard API documentation", version="1.0.0")
@@ -43,6 +43,10 @@ class QueuesInDetail(BaseModel):
     )
 
 
+class ListOfQueues(BaseModel):
+    queue_name: QueuesInDetail
+
+
 class QueueResponse(BaseModel):
     all_messages_in_queues: int = Field(0, description="overall queue count")
     all_messages_in_delay_queues: int = Field(
@@ -54,19 +58,7 @@ class QueueResponse(BaseModel):
     all_messages_in_dead_letter_queues: int = Field(
         0, description="overall dead queue count"
     )
-    queue_name: QueuesInDetail
-
-
-class QueueDetailResponse(BaseModel):
-    current_queue_msg: dict = Field(
-        [], description="dict with all of the messages in the current queue"
-    )
-    delay_queue_msg: dict = Field(
-        [], description="dict with all of the messages in the delay queue"
-    )
-    dead_queue: dict = Field(
-        [], description="dict with all of the messages in the dead queue"
-    )
+    list_of_queues: ListOfQueues
 
 
 class QueuePath(BaseModel):
@@ -86,6 +78,20 @@ class MessageResponse(BaseModel):
     message_timestamp: int = Field(0, description="actor name")
     options: dict = Field({}, description="options used by middelware")
     queue_name: str = Field(description="actor name")
+
+
+class MessagesOutline(BaseModel):
+    job_name: MessageResponse
+
+
+class ListOfMessages(BaseModel):
+    list_of_messages: MessagesOutline
+
+
+class QueueDetailResponse(BaseModel):
+    current_queue_msg: ListOfMessages
+    delay_queue_msg: ListOfMessages
+    dead_queue_msg: ListOfMessages
 
 
 class StatusResponse(BaseModel):
@@ -126,7 +132,7 @@ def api_messages_of_queue(path: QueuePath):
 @api.get(
     "/queue/<queue_name>/message/<message_id>",
     tags=[message_tag],
-    summary="get message",
+    summary="Get message",
     description="Gets the message from a Specific queue, like http://localhost:5000/api/queue/default/message/9951e7f5-a163-4ec0-99f3-07b593239fda",
     responses={"200": MessageResponse},
 )
@@ -137,8 +143,8 @@ def api_msg_details(path: MessagePath):
 @api.put(
     "/queue/<queue_name>/message/<message_id>/requeue",
     tags=[message_tag],
-    summary="requeue message",
-    description="moves the message from a dead or delay queue to the current queue, like http://localhost:5000/api/queue/default.DQ/message/9951e7f5-a163-4ec0-99f3-07b593239fda",
+    summary="Requeue message",
+    description="Moves a message from a dead or delay queue to the current queue, like http://localhost:5000/api/queue/default.DQ/message/9951e7f5-a163-4ec0-99f3-07b593239fda",
     responses={"200": StatusResponse},
 )
 def api_requeue_msg(path: MessagePath):
@@ -150,8 +156,8 @@ def api_requeue_msg(path: MessagePath):
 @api.delete(
     "/queue/<queue_name>/message/<message_id>",
     tags=[message_tag],
-    summary="delete message",
-    description="deletes the message from a queue, like http://localhost:5000/api/queue/default.XQ/message/9951e7f5-a163-4ec0-99f3-07b593239fda",
+    summary="Delete message",
+    description="Deletes a message from a queue, like http://localhost:5000/api/queue/default.XQ/message/9951e7f5-a163-4ec0-99f3-07b593239fda",
     responses={"200": StatusResponse},
 )
 def api_msg_delete(path: MessagePath):
@@ -162,37 +168,70 @@ app.register_api(api)
 
 
 @app.route("/")
-def home():
-    queues = requests.get(f"{request.url_root}api").json()
-    return render_template("base.html", queues=queues)
+@app.route("/queue")
+def all_queues():
+    queues = requests.get(f"{request.url_root}api/queue").json()
+    return render_template("home.html", queues=queues)
 
 
-@app.route("/<queue_name>")
-def queue_details(queue_name):
-    queues = requests.post(f"{request.url_root}api/{queue_name}").json()
-    return render_template("base.html", queues=queues)
+@app.route("/queue/<queue_name>/current")
+def current_details(queue_name):
+    queues = requests.get(f"{request.url_root}api/queue/{queue_name}").json()
+    return render_template(
+        "queue.html",
+        queue=queues["current_queue_msg"],
+        queues=queues,
+        queue_name=queue_name,
+        requeue=False,
+    )
 
 
-@app.route("/<queue_name>/<message_id>")
+@app.route("/queue/<queue_name>/delayed")
+def delayed_details(queue_name):
+    queues = requests.get(f"{request.url_root}api/queue/{queue_name}").json()
+    return render_template(
+        "queue.html",
+        queue=queues["delay_queue_msg"],
+        queues=queues,
+        queue_name=queue_name,
+        requeue=False,
+    )
+
+
+@app.route("/queue/<queue_name>/failed")
+def failed_details(queue_name):
+    queues = requests.get(f"{request.url_root}api/queue/{queue_name}").json()
+    return render_template(
+        "queue.html",
+        queue=queues["dead_queue_msg"],
+        queues=queues,
+        queue_name=queue_name,
+        requeue=True,
+    )
+
+
+@app.route("/queue/<queue_name>/message/<message_id>")
 def msg_details(queue_name, message_id):
-    queues = requests.post(f"{request.url_root}api/{queue_name}/{message_id}").json()
-    return render_template("base.html", queues=queues)
+    message = requests.get(
+        f"{request.url_root}api/queue/{queue_name}/message/{message_id}"
+    ).json()
+    return render_template("base.html", message=message, queue_name=queue_name)
 
 
-@app.route("/requeue/<queue_name>/<message_id>")
+@app.route("/queue/<queue_name>/message/<message_id>/requeue")
 def msg_requeue(queue_name, message_id):
-    queues = requests.post(
-        f"{request.url_root}api/requeue/{queue_name}/{message_id}"
+    queues = requests.put(
+        f"{request.url_root}api/queue/{queue_name}/message/{message_id}/requeue"
     ).json()
-    return render_template("base.html", queues=queues)
+    return redirect(location=f"/queue/{q_name(queue_name)}/current", code=301)
 
 
-@app.route("/delete/<queue_name>/<message_id>")
+@app.route("/queue/<queue_name>/message/<message_id>/delete")
 def msg_delete(queue_name, message_id):
-    queues = requests.post(
-        f"{request.url_root}api/delete/{queue_name}/{message_id}"
+    queues = requests.delete(
+        f"{request.url_root}api/queue/{queue_name}/message/{message_id}"
     ).json()
-    return render_template("base.html", queues=queues)
+    return redirect(location=f"/queue/{q_name(queue_name)}/failed", code=301)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block title %}Queue{% endblock %}
+
+{% block content %}
+<div class="d-flex d-grid gap-2 col-6 mx-auto">
+    <div class="p-2 flex-grow-1"><a class="btn btn-primary"
+            href="{{ url_for('current_details', queue_name=queue_name) }}" role="button">Current
+            ({{ queues["current_queue_msg"]|length }})</a></div>
+    <div class="p-2 flex-grow-1"><a class="btn btn-primary"
+            href="{{ url_for('delayed_details', queue_name=queue_name) }}" role="button">Delayed
+            ({{ queues["dead_queue"]|length }})</a></div>
+    <div class="p-2 flex-grow-1"><a class="btn btn-primary"
+            href="{{ url_for('failed_details', queue_name=queue_name) }}" role="button">Failed
+            ({{ queues["delay_queue_msg"]|length }})</a></div>
+</div>
+<div id="specific_queue_div">
+    <table>
+        <tr>
+            <th>Job</th>
+            <th>Actions</th>
+        </tr>
+        {% for msg in queue %}
+        {% for key, value in msg.items()  %}
+        <tr>
+            <td><a href="{{ url_for('msg_details', queue_name=value["queue_name"], message_id=value["message_id"]) }}"
+                    class="link-info">{{ key }}</a></td>
+            <td><button class="btn btn-danger" onclick="msg_delete(value[queue_name], value[message_id])">Delete</button>
+                {% if requeue %}
+                <button class="btn btn-danger" onclick="msg_requeue(value[queue_name], value[message_id])">requeue</button>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+        {% endfor %}
+    </table>
+</div>
+{% endblock %}

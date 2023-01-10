@@ -13,3 +13,6 @@ This project implements a dashboard for dramatiq when its running on RabbitMQ
 | DEBUG        | Debug setting                     | &nbsp;        |
 | HOST         | The host name                     | localhost     |
 | PORT         | The port value                    | 5672          |
+# OpenAPI documentation
+
+To access openAPI documentation navigate to /openapi/ URL 

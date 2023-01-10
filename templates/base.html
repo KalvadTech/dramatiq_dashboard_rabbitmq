@@ -1,8 +1,43 @@
-<table>
-    {% for key, value in queues.items() %}
-    <tr>
-        <td>{{ key }}</td>
-        <td>{{ value }}</td>
-    </tr>
-    {% endfor %}
-</table>
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+    <meta charset="utf-8">
+    <title>{% block title %}{% endblock title %} - Dramatiq dashboard</title>
+    <meta name="viewport" content="width=device-width,
+  initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
+    <!-- My CSS -->
+    <link rel="stylesheet" href="static/style.css">
+</head>
+
+<div class="container">
+    <header class="p-3 mb-3 border-bottom">
+        <div class="container">
+            <div class="d-flex flex-wrap align-items-center justify-content-center
+            justify-content-lg-start">
+                <a class="navbar-brand" href="/">Dashboard</a>
+                <ul class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center
+                mb-md-0">
+            </div>
+        </div>
+    </header>
+
+    <body>
+        <main>
+            {% block content %}
+            {% endblock content %}
+        </main>
+</div>
+</body>
+
+<!-- Bootstrap JavaScript Bundle -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN" crossorigin="anonymous">
+</script>
+</script>
+
+</html>

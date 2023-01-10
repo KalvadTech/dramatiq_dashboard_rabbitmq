@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block title %}Message{% endblock %}
+
+{% block content %}
+<div id="message_div">
+    <table>
+        {% for key, value in message.items()  %}
+        <tr>
+            <td>{{key}}</td>
+            <td>{{value}}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    <button class="btn btn-danger" onclick="msg_delete(queue_name, message[message_id])">Delete</button>
+</div>
+{% endblock %}

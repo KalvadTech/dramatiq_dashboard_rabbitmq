@@ -86,14 +86,14 @@ class Rabbitmq:
             dict: All of the messages inside the queues
         """
         # Get the messages in each queue
-        current_queue = self.get_queue(queue_name)
-        delay_queue = self.get_queue(dq_name(queue_name))
-        dead_queue = self.get_queue(xq_name(queue_name))
+        current_queues = self.get_queue(queue_name)
+        delay_queues = self.get_queue(dq_name(queue_name))
+        dead_queues = self.get_queue(xq_name(queue_name))
 
         queue = {
-            "current_queue_msg": current_queue,
-            "delay_queue_msg": delay_queue,
-            "dead_queue": dead_queue,
+            "current_queue_msg": self.format_queue_msg(current_queues),
+            "delay_queue_msg": self.format_queue_msg(delay_queues),
+            "dead_queue_msg": self.format_queue_msg(dead_queues),
         }
         return queue
 
@@ -209,6 +209,27 @@ class Rabbitmq:
         # Close the connection
         connection.close()
         return status
+
+    def format_queue_msg(self, list_of_msg):
+        """a function that formats the messages that are taken from the rabbitmq api
+        it stores inside a list many dicts that have the key as the actor_name+args
+        and there value as the dramatiq message format
+
+        Args:
+            list_of_msg (list): list of msg inside queue
+
+        Returns:
+            current_queue_send (list): a formated list of msg inside queue
+        """
+        current_queue_send = []
+        for msg in list_of_msg:
+            queue_json = json.loads(msg["payload"])
+            actor_name = queue_json["actor_name"]
+            args = queue_json["args"]
+            name = f"{actor_name}{args}"
+            msg_dict = {name: queue_json}
+            current_queue_send.append(msg_dict)
+        return current_queue_send
 
     def get_queue(self, queue_name):
         """Gets all the messages from a specfic queue
