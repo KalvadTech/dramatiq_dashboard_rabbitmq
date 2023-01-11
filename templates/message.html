@@ -1,17 +1,22 @@
 {% extends 'base.html' %}
 
-{% block title %}Message{% endblock %}
+{% block title %}Message: {{message.message_id}}{% endblock %}
 
 {% block content %}
-<div id="message_div">
-    <table>
-        {% for key, value in message.items()  %}
-        <tr>
-            <td>{{key}}</td>
-            <td>{{value}}</td>
-        </tr>
-        {% endfor %}
+<div class="container">
+    <h1>Message: {{message.message_id}}</h1>
+    <table class="table">
+        <tbody>
+            {% for key, value in message.items() %}
+            <tr>
+                <th>{{key}}</th>
+                <td>{{value}}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
     </table>
-    <button class="btn btn-danger" onclick="msg_delete(queue_name, message[message_id])">Delete</button>
+    <div class="text-right">
+        <button class="btn btn-danger" onclick="msg_delete('{{message.queue_name}}', '{{message.message_id}}')">Delete</button>
+    </div>
 </div>
 {% endblock %}

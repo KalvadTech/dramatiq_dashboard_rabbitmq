@@ -1,0 +1,98 @@
+body {
+    background-color: #f5f5f5;
+    font-family: 'Open Sans', sans-serif;
+}
+
+/* Main heading */
+h1 {
+    color: #343a40;
+}
+
+/* Links */
+a.link-info {
+    color: #007bff;
+    text-decoration: none;
+    transition: color 0.15s ease-in-out;
+}
+
+a.link-info:hover,
+a.link-info:focus {
+    color: #0056b3;
+    text-decoration: underline;
+}
+
+/* Table */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+table th,
+table td {
+    padding: 0.75rem;
+    vertical-align: top;
+    border-top: 1px solid #dee2e6;
+}
+
+table th {
+    font-weight: bold;
+}
+
+/* Cards */
+.card {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    border-radius: 0.25rem
+}
+
+/* Buttons */
+.btn {
+    border-radius: 0.25rem;
+    font-size: 1rem;
+    font-weight: 400;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    padding: 0.375rem 0.75rem;
+    transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.btn-danger {
+    color: #fff;
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+.btn-danger:hover,
+.btn-danger:focus {
+    color: #fff;
+    background-color: #c82333;
+    border-color: #bd2130;
+}
+
+.btn-warning {
+    color: #212529;
+    background-color: #ffeb3b;
+    border-color: #ffeb3b;
+}
+
+.btn-warning:hover,
+.btn-warning:focus {
+    color: #212529;
+    background-color: #fff176;
+    border-color: #fff176;
+}
+
+/* Navbar */
+.navbar {
+    background-color: #343a40;
+}
+
+.navbar a {
+    color: rgb(0, 0, 0);
+}
+
+.navbar a:hover,
+.navbar a:focus {
+    color: #000000;
+}

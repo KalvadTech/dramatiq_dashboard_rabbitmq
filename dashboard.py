@@ -161,6 +161,7 @@ def api_requeue_msg(path: MessagePath):
     responses={"200": StatusResponse},
 )
 def api_msg_delete(path: MessagePath):
+    logger.debug(path.queue_name, path.message_id)
     return broker.delete_msg(path.queue_name, path.message_id)
 
 
@@ -194,7 +195,7 @@ def delayed_details(queue_name):
         queue=queues["delay_queue_msg"],
         queues=queues,
         queue_name=queue_name,
-        requeue=False,
+        requeue=True,
     )
 
 
@@ -215,23 +216,13 @@ def msg_details(queue_name, message_id):
     message = requests.get(
         f"{request.url_root}api/queue/{queue_name}/message/{message_id}"
     ).json()
+    try:
+        if message["status"] != None:
+            return redirect(f"{request.url_root}queue/{queue_name}/current", code=302)
+    except KeyError:
+        pass
+
     return render_template("message.html", message=message, queue_name=queue_name)
-
-
-@app.route("/queue/<queue_name>/message/<message_id>/requeue")
-def msg_requeue(queue_name, message_id):
-    queues = requests.put(
-        f"{request.url_root}api/queue/{queue_name}/message/{message_id}/requeue"
-    ).json()
-    return redirect(location=f"/queue/{q_name(queue_name)}/current", code=301)
-
-
-@app.route("/queue/<queue_name>/message/<message_id>/delete")
-def msg_delete(queue_name, message_id):
-    queues = requests.delete(
-        f"{request.url_root}api/queue/{queue_name}/message/{message_id}"
-    ).json()
-    return redirect(location=f"/queue/{q_name(queue_name)}/failed", code=301)
 
 
 if __name__ == "__main__":
