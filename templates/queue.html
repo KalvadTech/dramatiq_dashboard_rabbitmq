@@ -9,10 +9,10 @@
             ({{ queues["current_queue_msg"]|length }})</a></div>
     <div class="p-2 flex-grow-1"><a class="btn btn-primary"
             href="{{ url_for('delayed_details', queue_name=queue_name) }}" role="button">Delayed
-            ({{ queues["dead_queue"]|length }})</a></div>
+            ({{ queues["delay_queue_msg"]|length }})</a></div>
     <div class="p-2 flex-grow-1"><a class="btn btn-primary"
             href="{{ url_for('failed_details', queue_name=queue_name) }}" role="button">Failed
-            ({{ queues["delay_queue_msg"]|length }})</a></div>
+            ({{ queues["dead_queue_msg"]|length }})</a></div>
 </div>
 <div id="specific_queue_div">
     <table>

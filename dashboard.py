@@ -215,7 +215,7 @@ def msg_details(queue_name, message_id):
     message = requests.get(
         f"{request.url_root}api/queue/{queue_name}/message/{message_id}"
     ).json()
-    return render_template("base.html", message=message, queue_name=queue_name)
+    return render_template("message.html", message=message, queue_name=queue_name)
 
 
 @app.route("/queue/<queue_name>/message/<message_id>/requeue")
