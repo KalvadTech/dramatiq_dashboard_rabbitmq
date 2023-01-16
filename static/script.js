@@ -24,7 +24,7 @@ function msg_delete(queue_name, message_id) {
 function msg_requeue(queue_name, message_id) {
     if (confirm("Are you sure you want to requeue this message?")) {
         // Send a PUT request to the server using the fetch API
-        fetch("api/queue/" + queue_name + '/message/' + message_id + '/requeue', {
+        fetch("/api/queue/" + queue_name + '/message/' + message_id + '/requeue', {
             method: "PUT"
         })
             .then(response => {

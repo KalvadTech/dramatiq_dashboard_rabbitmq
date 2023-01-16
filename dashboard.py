@@ -183,6 +183,7 @@ def current_details(queue_name):
         queue=queues["current_queue_msg"],
         queues=queues,
         queue_name=queue_name,
+        current_page="current",
         requeue=False,
     )
 
@@ -195,6 +196,7 @@ def delayed_details(queue_name):
         queue=queues["delay_queue_msg"],
         queues=queues,
         queue_name=queue_name,
+        current_page="delay",
         requeue=True,
     )
 
@@ -207,18 +209,23 @@ def failed_details(queue_name):
         queue=queues["dead_queue_msg"],
         queues=queues,
         queue_name=queue_name,
+        dead_queue_name=xq_name(queue_name),
+        current_page="dead",
         requeue=True,
     )
 
 
 @app.route("/queue/<queue_name>/message/<message_id>")
 def msg_details(queue_name, message_id):
+    print(queue_name)
     message = requests.get(
         f"{request.url_root}api/queue/{queue_name}/message/{message_id}"
     ).json()
     try:
         if message["status"] != None:
-            return redirect(f"{request.url_root}queue/{queue_name}/current", code=302)
+            return redirect(
+                f"{request.url_root}queue/{q_name(queue_name)}/current", code=302
+            )
     except KeyError:
         pass
 

@@ -7,9 +7,12 @@
     <div class="d-flex justify-content-between mb-3">
         <h1>{{queue_name}}</h1>
         <div class="btn-group">
-            <a class="btn btn-primary" href="{{ url_for('current_details', queue_name=queue_name) }}">Current ({{ queues["current_queue_msg"]|length }})</a>
-            <a class="btn btn-warning" href="{{ url_for('delayed_details', queue_name=queue_name) }}">Delayed ({{ queues["delay_queue_msg"]|length }})</a>
-            <a class="btn btn-danger" href="{{ url_for('failed_details', queue_name=queue_name) }}">Failed ({{ queues["dead_queue_msg"]|length }})</a>
+            <a class="btn btn-primary" href="{{ url_for('current_details', queue_name=queue_name) }}">Current
+                ({{ queues["current_queue_msg"]|length }})</a>
+            <a class="btn btn-warning" href="{{ url_for('delayed_details', queue_name=queue_name) }}">Delayed
+                ({{ queues["delay_queue_msg"]|length }})</a>
+            <a class="btn btn-danger" href="{{ url_for('failed_details', queue_name=queue_name) }}">Failed
+                ({{ queues["dead_queue_msg"]|length }})</a>
         </div>
     </div>
 
@@ -17,6 +20,7 @@
         <thead>
             <tr>
                 <th>Job</th>
+                <th>args</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -24,13 +28,31 @@
             {% for msg in queue %}
             {% for key, value in msg.items() %}
             <tr>
-                <td><a href="{{ url_for('msg_details', queue_name=value["queue_name"], message_id=value["message_id"]) }}"
-                        class="link-info">{{ key }}</a></td>
-                <td>
-                    {% if requeue %}
-                    <button class="btn btn-info" onclick="msg_requeue('{{value.queue_name}}', '{{value.message_id}}')">Requeue</button>
+                <td>{% if current_page == "dead" %}
+                    <a href="{{ url_for('msg_details', queue_name=dead_queue_name, message_id=value["message_id"]) }}"
+                        class="link-info">{{ key }}</a>
+                    {% else %}
+                    <a href="{{ url_for('msg_details', queue_name=value.queue_name, message_id=value["message_id"]) }}"
+                        class="link-info">{{ key }}</a>
                     {% endif %}
-                    <button class="btn btn-danger" onclick="msg_delete('{{value.queue_name}}', '{{value.message_id}}')">Delete</button>
+                </td>
+                <td> <p>{{value.args}}</p></td>
+                <td>
+                    {% if current_page == "dead" %}
+                    {% if requeue %}
+                    <button class="btn btn-info"
+                        onclick="msg_requeue('{{dead_queue_name}}', '{{value.message_id}}')">Requeue</button>
+                    {% endif %}
+                    <button class="btn btn-danger"
+                        onclick="msg_delete('{{dead_queue_name}}', '{{value.message_id}}')">Delete</button>
+                    {% else %}
+                    {% if requeue %}
+                    <button class="btn btn-info"
+                        onclick="msg_requeue('{{value.queue_name}}', '{{value.message_id}}')">Requeue</button>
+                    {% endif %}
+                    <button class="btn btn-danger"
+                        onclick="msg_delete('{{value.queue_name}}', '{{value.message_id}}')">Delete</button>
+                    {% endif %}
                 </td>
             </tr>
             {% endfor %}
