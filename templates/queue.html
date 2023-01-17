@@ -19,16 +19,17 @@
     <table class="table">
         <thead>
             <tr>
-                <th>Job</th>
-                <th>args</th>
-                <th>Actions</th>
+                <th class="col-7">Job</th>
+                <th class="col-1">Created at</th>
+                <th class="col-1">Retries</th>
+                <th class="col-5">Actions</th>
             </tr>
         </thead>
         <tbody>
             {% for msg in queue %}
             {% for key, value in msg.items() %}
             <tr>
-                <td>{% if current_page == "dead" %}
+                <td class="col-7">{% if current_page == "dead" %}
                     <a href="{{ url_for('msg_details', queue_name=dead_queue_name, message_id=value["message_id"]) }}"
                         class="link-info">{{ key }}</a>
                     {% else %}
@@ -36,8 +37,13 @@
                         class="link-info">{{ key }}</a>
                     {% endif %}
                 </td>
-                <td> <p>{{value.args}}</p></td>
-                <td>
+                <td class="col-1">{{value.created_at}}</td>
+                {% if value.options.retries %}
+                <td class="col-1 text-danger">{{value.options.retries}}</td>
+                {% else %}
+                <td class="col-1 text-danger">0</td>
+                {% endif %}
+                <td class="col-5">
                     {% if current_page == "dead" %}
                     {% if requeue %}
                     <button class="btn btn-info"

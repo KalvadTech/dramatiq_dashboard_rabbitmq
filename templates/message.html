@@ -10,7 +10,15 @@
             {% for key, value in message.items() %}
             <tr>
                 <th>{{key}}</th>
-                <td>{{value}}</td>
+                {% if key == "traceback" %}
+                    <td>
+                        <pre class="bg-light">
+                            <code class="text-danger">{{value}}</code>
+                        </pre>
+                    </td>  
+                {% else %}           
+                    <td>{{value}}</td>
+                {% endif %}
             </tr>
             {% endfor %}
         </tbody>

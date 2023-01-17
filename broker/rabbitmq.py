@@ -3,6 +3,7 @@ import json
 from dramatiq.common import dq_name, q_name, xq_name, current_millis
 import pika
 from loguru import logger
+import datetime
 
 
 class Rabbitmq:
@@ -114,6 +115,16 @@ class Rabbitmq:
         for message in messages:
             message_json = json.loads(message["payload"])
             if message_json["message_id"] == message_id:
+                message_json["created_at"] = time_since_timestamp(
+                    message_json["message_timestamp"]
+                )
+                try:
+                    message_json["retries"] = message_json["options"]["retries"]
+                    message_json["traceback"] = message_json["options"]["traceback"]
+                except KeyError:
+                    message_json["retries"] = 0
+                    message_json["traceback"] = ""
+                del message_json["options"]
                 return message_json
 
         return {
@@ -227,6 +238,9 @@ class Rabbitmq:
             actor_name = queue_json["actor_name"]
             args = queue_json["args"]
             name = f"{actor_name}{args}"
+            queue_json["created_at"] = time_since_timestamp(
+                queue_json["message_timestamp"]
+            )
             msg_dict = {name: queue_json}
             current_queue_send.append(msg_dict)
         return current_queue_send
@@ -250,3 +264,18 @@ class Rabbitmq:
         )
         response = requests.post(url, auth=self.auth, data=payload).json()
         return response
+
+
+def time_since_timestamp(timestamp):
+    current_time = current_millis()
+    time_diff = current_time - timestamp
+    diff = datetime.timedelta(milliseconds=time_diff)
+    s = diff.seconds
+    if s <= 60:
+        return str(s) + "s ago"
+    elif s > 60 and s <= 3600:
+        return str(s // 60) + "m ago"
+    elif s > 3600 and s <= 86400:
+        return str(s // 3600) + "h ago"
+    elif s > 86400:
+        return str(s // 86400) + "d ago"

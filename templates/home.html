@@ -15,7 +15,8 @@
                 {% set _dummy=queues.pop("all_messages_in_queues") %}
                 <p> The number of messages in all delay queues is: {{ queues["all_messages_in_delay_queues"] }} </p>
                 {% set _dummy=queues.pop("all_messages_in_delay_queues") %}
-                <p> The number of messages in all dead queues is: {{ queues["all_messages_in_dead_letter_queues"] }} </p>
+                <p> The number of messages in all dead queues is: {{ queues["all_messages_in_dead_letter_queues"] }}
+                </p>
                 {% set _dummy=queues.pop("all_messages_in_dead_letter_queues") %}
             </div>
         </div>
@@ -35,12 +36,13 @@
                     </thead>
                     <tbody>
                         {% for key, value in queues.items() %}
-                            <tr>
-                                <td><a href="{{ url_for('current_details', queue_name=key) }}" class="link-info">{{ key }}</a></td>
-                                <td>{{queues[key]["current_message_count"]}}</td>
-                                <td>{{queues[key]["delay_message_count"]}}</td>
-                                <td>{{queues[key]["dead_message_count"]}}</td>
-                            </tr>
+                        <tr>
+                            <td><a href="{{ url_for('current_details', queue_name=key) }}"
+                                    class="link-info">{{ key }}</a></td>
+                            <td class="text-success">{{queues[key]["current_message_count"]}}</td>
+                            <td class="text-warning">{{queues[key]["delay_message_count"]}}</td>
+                            <td class="text-danger">{{queues[key]["dead_message_count"]}}</td>
+                        </tr>
                         {% endfor %}
                     </tbody>
                 </table>

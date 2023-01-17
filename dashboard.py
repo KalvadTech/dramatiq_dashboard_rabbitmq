@@ -72,11 +72,16 @@ class MessagePath(BaseModel):
 
 class MessageResponse(BaseModel):
     actor_name: str = Field(description="actor name")
-    args: dict = Field([], description="actor name")
-    kwargs: dict = Field({}, description="actor name")
-    message_id: str = Field(description="actor name")
-    message_timestamp: int = Field(0, description="actor name")
-    options: dict = Field({}, description="options used by middelware")
+    args: dict = Field([], description="The vaules passed to the actor")
+    kwargs: dict = Field({}, description="the keyword arguments passed to the actor")
+    created_at: int = Field(0, description="how long ago the message was created")
+    message_id: str = Field(description="the uuid of the message")
+    message_timestamp: int = Field(
+        0,
+        description="the time that the message was created which is a unix timestamp in miliseconds",
+    )
+    retries: int = Field({}, description="number of retries for this job")
+    traceback: str = Field(description="The error given from the worker")
     queue_name: str = Field(description="actor name")
 
 
@@ -217,7 +222,6 @@ def failed_details(queue_name):
 
 @app.route("/queue/<queue_name>/message/<message_id>")
 def msg_details(queue_name, message_id):
-    print(queue_name)
     message = requests.get(
         f"{request.url_root}api/queue/{queue_name}/message/{message_id}"
     ).json()
