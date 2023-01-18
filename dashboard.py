@@ -12,6 +12,32 @@ from loguru import logger
 info = Info(title="dramatiq dashboard API documentation", version="1.0.0")
 app = OpenAPI(__name__, info=info)
 
+#=== fancy assets
+from flask_assets import Bundle, Environment
+from webassets.filter import ExternalTool
+
+app.config['ASSETS_DEBUG'] = True
+assets = Environment(app)
+assets.url = app.static_url_path
+scss_all = Bundle('style.scss',filters='libsass', output='.webassets-cache/style.css')
+assets.register('scss_all', scss_all)
+class Rollup(ExternalTool):
+    max_debug_level = None
+    def input(self, infile, outfile, **kwargs):
+        args = ['node_modules/.bin/rollup']
+        args.append("--format=iife")
+        args.append("-p=@rollup/plugin-node-resolve,@rollup/plugin-typescript")
+        args.append("-m=inline")
+        args.append(kwargs['source_path'])
+        self.subprocess(args, outfile, infile)
+ts_all = Bundle(
+    'script.ts',
+    filters=(Rollup()),
+    output='.webassets-cache/script.js',
+)
+assets.register('ts_all', ts_all)
+#=== fancy assets end
+
 api = APIBlueprint("queue", __name__, url_prefix="/api")
 
 queue_tag = Tag(name="queue", description="queue endpoints")

@@ -1,5 +1,11 @@
+
+import * as bootstrap from 'bootstrap';
+
+(window as  any).bootstrap = bootstrap;
+
+
 // Delete message
-function msg_delete(queue_name, message_id) {
+(window as any).msg_delete = (queue_name, message_id) => {
     if (confirm("Are you sure you want to delete this message?")) {
         // Send a DELETE request to the server using the fetch API
         fetch("/api/queue/" + queue_name + '/message/' + message_id, {
@@ -20,7 +26,7 @@ function msg_delete(queue_name, message_id) {
 }
 
 // Requeue message
-function msg_requeue(queue_name, message_id) {
+(window as any).msg_requeue = (queue_name, message_id) => {
     if (confirm("Are you sure you want to requeue this message?")) {
         // Send a PUT request to the server using the fetch API
         fetch("/api/queue/" + queue_name + '/message/' + message_id + '/requeue', {
