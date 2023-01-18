@@ -7,24 +7,32 @@ import datetime
 
 
 class Rabbitmq:
-    def __init__(self, base_url, rabbit_user, rabbit_pass, vhost, host, port):
+    def __init__(
+        self,
+        rabbitmq_api_url,
+        rabbitmq_user,
+        rabbitmq_pass,
+        rabbitmq_vhost,
+        rabbitmq_host,
+        rabbitmq_port,
+    ):
         """Interacts with the RabbitMQ management RESTful API and pika
         to track and manage the queues and messages used by dramatiq
 
         Args:
-            base_url (str): The url of the RabbitMQ management RESTful API
+            rabbitmq_api_url (str): The url of the RabbitMQ management RESTful API
             rabbit_user (str): The RabbitMQ username
             rabbit_pass (str): The RabbitMQ password
-            vhost (str): The vhost name
-            host (str): The host name
-            port (int): The port number
+            rabbitmq_vhost (str): The vhost name
+            rabbitmq_host (str): Hostname or IP Address to connect to for rabbitmq
+            rabbitmq_port (int): TCP port to connect to for rabbitmq connection
         """
-        self.base_url = base_url
-        self.auth = (rabbit_user, rabbit_pass)
-        self.vhost = vhost
-        self.credentials = pika.PlainCredentials(rabbit_user, rabbit_pass)
+        self.base_url = rabbitmq_api_url
+        self.auth = (rabbitmq_user, rabbitmq_pass)
+        self.vhost = rabbitmq_vhost
+        self.credentials = pika.PlainCredentials(rabbitmq_user, rabbitmq_pass)
         self.parameters = pika.ConnectionParameters(
-            host, port, self.vhost, self.credentials
+            rabbitmq_host, rabbitmq_port, self.vhost, self.credentials
         )
 
     def get_all_queues(self):

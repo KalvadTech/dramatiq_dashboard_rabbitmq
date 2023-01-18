@@ -10,46 +10,46 @@ class Config:
         """
         Returns the host for rabbitmq
         """
-        return os.environ.get("HOST", "localhost")
+        return os.environ.get("RABBITMQ_HOST", "localhost")
 
     @property
     def port(self):
         """
         Returns the port for rabbitmq
         """
-        return os.environ.get("PORT", 5672)
+        return os.environ.get("RABBITMQ_PORT", 5672)
 
     @property
     def base_url(self):
         """
         Returns the BASE_URL for RabbitMQ management RESTful API
         """
-        return os.environ.get("BASE_URL", "")
+        return os.environ.get("RABBITMQ_API_URL", "")
 
     @property
     def rabbit_user(self):
         """
-        Returns the RABBIT_USER
+        Returns the RABBITMQ_USER
         """
-        return os.environ.get("RABBIT_USER", "")
+        return os.environ.get("RABBITMQ_USER", "")
 
     @property
     def rabbit_pass(self):
         """
-        Returns the RABBIT_PASS
+        Returns the RABBITMQ_PASS
         """
-        return os.environ.get("RABBIT_PASS", "")
+        return os.environ.get("RABBITMQ_PASS", "")
 
     @property
     def vhost(self):
         """
         Returns the VHOST
         """
-        return os.environ.get("VHOST", "")
+        return os.environ.get("RABBITMQ_VHOST", "")
 
     @property
     def debug(self):
         """
         Returns the DEBUG
         """
-        return os.environ.get("DEBUG", "true").lower() == "true"
+        return os.environ.get("DEBUG", "false").lower() == "true"

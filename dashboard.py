@@ -19,16 +19,23 @@ message_tag = Tag(name="message", description="message endpoints")
 
 conf = config.Config()
 
-BASE_URL = conf.base_url
-RABBIT_USER = conf.rabbit_user
-RABBIT_PASS = conf.rabbit_pass
-VHOST = conf.vhost
+RABBITMQ_API_URL = conf.base_url
+RABBITMQ_USER = conf.rabbit_user
+RABBITMQ_PASS = conf.rabbit_pass
+RABBITMQ_VHOST = conf.vhost
 DEBUG = conf.debug
-HOST = conf.host
-PORT = conf.port
+RABBITMQ_HOST = conf.host
+RABBITMQ_PORT = conf.port
 
 
-broker = Rabbitmq(BASE_URL, RABBIT_USER, RABBIT_PASS, VHOST, HOST, PORT)
+broker = Rabbitmq(
+    RABBITMQ_API_URL,
+    RABBITMQ_USER,
+    RABBITMQ_PASS,
+    RABBITMQ_VHOST,
+    RABBITMQ_HOST,
+    RABBITMQ_PORT,
+)
 
 
 class QueuesInDetail(BaseModel):

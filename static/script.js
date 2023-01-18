@@ -7,7 +7,6 @@ function msg_delete(queue_name, message_id) {
         })
             .then(response => {
                 if (response.ok) {
-                    alert("Message deleted successfully!");
                     location.reload();
                 } else {
                     alert("There was an error deleting the message. Please try again.");
@@ -29,7 +28,6 @@ function msg_requeue(queue_name, message_id) {
         })
             .then(response => {
                 if (response.ok) {
-                    alert("Message requeued successfully!");
                     location.reload();
                 } else {
                     alert("There was an error requeueing the message. Please try again.");
