@@ -8,8 +8,10 @@
         <h1>Dramatiq Dashboard</h1>
     </div>
     <div class="col-md-6">
-        <div class="card">
+        <div class="card queue-card">
             <div class="card-body">
+                <h5 class="card-title">All queue chart</h5>
+                <canvas id="message-count-chart"></canvas>
                 <h5 class="card-title">All queue Stats</h5>
                 <p> The number of messages in all current queues is: {{ queues["all_messages_in_queues"] }} </p>
                 {% set _dummy=queues.pop("all_messages_in_queues") %}
@@ -22,7 +24,7 @@
         </div>
     </div>
     <div class="col-md-6">
-        <div class="card">
+        <div class="card queue-card">
             <div class="card-body">
                 <h5 class="card-title">Queue Details</h5>
                 <table class="table">
@@ -38,7 +40,7 @@
                         {% for key, value in queues.items() %}
                         <tr>
                             <td><a href="{{ url_for('current_details', queue_name=key) }}"
-                                    class="link-info">{{ key }}</a></td>
+                                    class="">{{ key }}</a></td>
                             <td class="text-success">{{queues[key]["current_message_count"]}}</td>
                             <td class="text-warning">{{queues[key]["delay_message_count"]}}</td>
                             <td class="text-danger">{{queues[key]["dead_message_count"]}}</td>
@@ -50,4 +52,9 @@
         </div>
     </div>
 </div>
+<script>
+    window.chart = {chart_current: {{ chart.chart_current|tojson|safe }}, 
+    chart_delay: {{ chart.chart_delay|tojson|safe }}, 
+    chart_dead: {{ chart.chart_dead|tojson|safe }}};
+</script>
 {% endblock %}

@@ -5,22 +5,23 @@
 {% block content %}
 <div class="container">
     <div class="d-flex justify-content-between mb-3">
-        <h1>{{queue_name}}</h1>
+        <h1>Queue Name: {{queue_name}}</h1>
         <div class="btn-group">
-            <a class="btn btn-primary" href="{{ url_for('current_details', queue_name=queue_name) }}">Current
+            <a class="btn btn-primary {% if current_page == 'current' %} active {% endif %}" href="{{ url_for('current_details', queue_name=queue_name) }}">Current
                 ({{ queues["current_queue_msg"]|length }})</a>
-            <a class="btn btn-warning" href="{{ url_for('delayed_details', queue_name=queue_name) }}">Delayed
+            <a class="btn btn-warning {% if current_page == 'delay' %} active {% endif %}" href="{{ url_for('delayed_details', queue_name=queue_name) }}">Delayed
                 ({{ queues["delay_queue_msg"]|length }})</a>
-            <a class="btn btn-danger" href="{{ url_for('failed_details', queue_name=queue_name) }}">Failed
+            <a class="btn btn-danger {% if current_page == 'dead' %} active {% endif %}" href="{{ url_for('failed_details', queue_name=queue_name) }}">Failed
                 ({{ queues["dead_queue_msg"]|length }})</a>
         </div>
     </div>
+</div>
 
     <table class="table">
         <thead>
             <tr>
-                <th class="col-7">Job</th>
-                <th class="col-1">Created at</th>
+                <th class="col-7"><i class="bi bi-dash-circle"></i>Job</th>
+                <th class="col-1"><i class="bi-alarm"></i>Created at</th>
                 <th class="col-1">Retries</th>
                 <th class="col-5">Actions</th>
             </tr>
@@ -29,12 +30,12 @@
             {% for msg in queue %}
             {% for key, value in msg.items() %}
             <tr>
-                <td class="col-7">{% if current_page == "dead" %}
+                <td class="col-8">{% if current_page == "dead" %}
                     <a href="{{ url_for('msg_details', queue_name=dead_queue_name, message_id=value["message_id"]) }}"
-                        class="link-info">{{ key }}</a>
+                        class="">{{ key }}</a>
                     {% else %}
                     <a href="{{ url_for('msg_details', queue_name=value.queue_name, message_id=value["message_id"]) }}"
-                        class="link-info">{{ key }}</a>
+                        class="">{{ key }}</a>
                     {% endif %}
                 </td>
                 <td class="col-1">{{value.created_at}}</td>
@@ -46,14 +47,14 @@
                 <td class="col-5">
                     {% if current_page == "dead" %}
                     {% if requeue %}
-                    <button class="btn btn-info"
+                    <button class="btn btn-primary"
                         onclick="msg_requeue('{{dead_queue_name}}', '{{value.message_id}}')">Requeue</button>
                     {% endif %}
                     <button class="btn btn-danger"
                         onclick="msg_delete('{{dead_queue_name}}', '{{value.message_id}}')">Delete</button>
                     {% else %}
                     {% if requeue %}
-                    <button class="btn btn-info"
+                    <button class="btn btn-primary"
                         onclick="msg_requeue('{{value.queue_name}}', '{{value.message_id}}')">Requeue</button>
                     {% endif %}
                     <button class="btn btn-danger"

@@ -5,6 +5,10 @@ import pika
 from loguru import logger
 import datetime
 
+chart_current = []
+chart_delay = []
+chart_dead = []
+
 
 class Rabbitmq:
     def __init__(
@@ -79,6 +83,21 @@ class Rabbitmq:
                 all_msg_dead += dead_queue["messages"]
 
         # Update the overall counters
+        chart_current.append(all_msg_current)
+        chart_delay.append(all_msg_delay)
+        chart_dead.append(all_msg_dead)
+        if chart_current.__len__() >= 100:
+            chart_current.pop(0)
+        if chart_delay.__len__() >= 100:
+            chart_delay.pop(0)
+        if chart_dead.__len__() >= 100:
+            chart_dead.pop(0)
+        chart_data = {
+            "chart_current": chart_current,
+            "chart_delay": chart_delay,
+            "chart_dead": chart_dead,
+        }
+        dict_of_queues.update({"chart_data": chart_data})
         dict_of_queues.update({"all_messages_in_queues": all_msg_current})
         dict_of_queues.update({"all_messages_in_delay_queues": all_msg_delay})
         dict_of_queues.update({"all_messages_in_dead_letter_queues": all_msg_dead})

@@ -4,23 +4,51 @@
 
 {% block content %}
 <div class="container">
-    <h1>Message: {{message.message_id}}</h1>
+    <h1>Message details</h1>
     <table class="table">
         <tbody>
-            {% for key, value in message.items() %}
             <tr>
-                <th>{{key}}</th>
-                {% if key == "traceback" %}
+                <th>message_id</th>     
+                <td>{{message.message_id}}</td>
+            </tr>
+            <tr>
+                <th>actor_name</th>
+                <td>{{message.actor_name}}</td>
+            </tr>
+            <tr>
+                <th>args</th>
+                <td>{{message.args}}</td>
+            </tr>
+            <tr>
+                <th>kwargs</th>
+                <td>{{message.kwargs}}</td>
+            </tr>
+            <tr>
+                <th>created_at</th>
+                <td>{{message.created_at}}</td>
+            </tr>
+            <tr>
+                <th>message_timestamp</th>
+                <td>{{message.message_timestamp}}</td>
+            </tr>
+            <tr>
+                <th>queue_name</th>
+                <td>{{message.queue_name}}</td>
+            </tr>
+            <tr>
+                <th>retries</th>
+                <td>{{message.retries}}</td>
+            </tr>
+            {% if message.traceback %}
+            <tr>
+                <th>traceback</th>
                     <td>
-                        <pre class="bg-light">
-                            <code class="text-danger">{{value}}</code>
+                        <pre class="code">
+                            <code class="text-danger">{{message.traceback}}</code>
                         </pre>
                     </td>  
-                {% else %}           
-                    <td>{{value}}</td>
-                {% endif %}
             </tr>
-            {% endfor %}
+            {% endif %}
         </tbody>
     </table>
     <div class="text-right">
