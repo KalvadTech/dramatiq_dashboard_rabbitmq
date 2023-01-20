@@ -145,6 +145,14 @@ class Rabbitmq:
                 message_json["created_at"] = time_since_timestamp(
                     message_json["message_timestamp"]
                 )
+                message_timestamp = message_json["message_timestamp"]
+                message_date = datetime.datetime.fromtimestamp(
+                    message_json["message_timestamp"] / 1000
+                )
+                message_json[
+                    "message_timestamp"
+                ] = f"{message_timestamp} ({message_date})"
+
                 try:
                     message_json["retries"] = message_json["options"]["retries"]
                     message_json["traceback"] = message_json["options"]["traceback"]

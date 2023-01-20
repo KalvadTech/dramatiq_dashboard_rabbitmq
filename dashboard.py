@@ -217,7 +217,7 @@ def all_queues():
     queues = requests.get(f"{request.url_root}api/queue").json()
     chart = queues["chart_data"]
     del queues["chart_data"]
-    return render_template("home.html", queues=queues, chart=chart)
+    return render_template("home.html", queues=queues, chart_data=chart)
 
 
 @app.route("/queue/<queue_name>/current")

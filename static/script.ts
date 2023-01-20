@@ -1,4 +1,4 @@
-import Chart, { ChartConfiguration, ChartItem } from 'chart.js/auto';
+import Chart from 'chart.js/auto';
 import * as bootstrap from 'bootstrap';
 
 (window as any).bootstrap = bootstrap;
@@ -54,10 +54,17 @@ import * as bootstrap from 'bootstrap';
 
 // refreshPage();
 
-
-const currentData = window.chart.chart_current;
-const delayedData = window.chart.chart_delay;
-const failedData = window.chart.chart_dead;
+const chartValue = (document.getElementById("chartdata") as HTMLInputElement).value;
+let chartData = JSON.parse(chartValue);
+let currentData = chartData["chart_current"];
+let delayedData = chartData["chart_delay"];
+let failedData = chartData["chart_dead"];
+const currentTime = new Date();
+const chartLabels = Array.from({ length: currentData.length }, (_, i) => {
+    const time = new Date(currentTime);
+    time.setSeconds(time.getSeconds() - (currentData.length - i - 1) * 5);
+    return time.toLocaleTimeString();
+});
 
 
 // create chart
@@ -65,7 +72,7 @@ const ctx = document.getElementById('message-count-chart') as HTMLCanvasElement;
 const chart = new Chart(ctx, {
     type: 'line',
     data: {
-        labels: ['Queue 1', 'Queue 2', 'Queue 3', 'Queue 4', 'Queue 5'],
+        labels: chartLabels,
         datasets: [{
             label: 'Current',
             data: currentData,
@@ -89,8 +96,12 @@ const chart = new Chart(ctx, {
     options: {
         scales: {
             y: {
-                beginAtZero: true
+                beginAtZero: true,
+                ticks: {
+                    callback: function (value: number) { if (value % 1 === 0) { return value; } }
+                }
             }
+
         }
     }
 });

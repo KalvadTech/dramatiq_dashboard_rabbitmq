@@ -25,6 +25,16 @@ $link-color: #1f499e;
         background-color: #292929;
     }
 
+    .card-title {
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+
+    .card-text {
+        font-size: 1.2rem;
+        margin-bottom: 1rem;
+    }
+
 }
 
 
@@ -71,26 +81,20 @@ $link-color: #1f499e;
 
 }
 
-.card-title {
-    font-size: 1.5rem;
-    font-weight: bold;
-}
-
-.card-text {
-    font-size: 1.2rem;
-    margin-bottom: 1rem;
-}
-
 .btn-group {
     a {
         &.active {
             transform: scale(1.1);
-            background: $secondary;
-            color: $color;
+            box-shadow: 2px 2px 5px $color;
         }
     }
 }
 
+
 .code {
     background-color: #292929;
+}
+
+.chart {
+    background-color: white;
 }
