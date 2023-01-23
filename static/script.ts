@@ -1,58 +1,84 @@
-import Chart from 'chart.js/auto';
-import * as bootstrap from 'bootstrap';
+import { Chart, LineController, LineElement, CategoryScale, Tooltip, Legend, PointElement, Filler, LinearScale } from 'chart.js';
+import Swal from 'sweetalert2';
 
-(window as any).bootstrap = bootstrap;
+Chart.register(LineController, LineElement, CategoryScale, Tooltip, Legend, PointElement, Filler, LinearScale);
 
+const elementStyle = window.getComputedStyle(document.body, null);
+const elementColor = elementStyle.getPropertyValue('color');
+const elementBackground = elementStyle.getPropertyValue('background');
 
-// Delete message
+let refreshIntervalId: number;
+
+function refreshPage() {
+    refreshIntervalId = setTimeout(function () {
+        location.reload();
+    }, 5000);
+}
+
 (window as any).msg_delete = (queue_name: string, message_id: string) => {
-    if (confirm("Are you sure you want to delete this message?")) {
-        // Send a DELETE request to the server using the fetch API
-        fetch("/api/queue/" + queue_name + '/message/' + message_id, {
-            method: "DELETE"
-        })
-            .then(response => {
-                if (response.ok) {
-                    location.reload();
-                } else {
-                    alert("There was an error deleting the message. Please try again.");
-                }
+    clearTimeout(refreshIntervalId);
+    Swal.fire({
+        title: 'Are you sure you want to delete this message?',
+        showDenyButton: true,
+        confirmButtonText: 'Yes',
+        denyButtonText: `No`,
+        background: elementBackground,
+        color: elementColor,
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch("/api/queue/" + queue_name + '/message/' + message_id, {
+                method: "DELETE"
             })
-            .catch(error => {
-                console.error("Error:", error);
-                alert("There was an error deleting the message. Please try again.");
-            });
-    }
+                .then(response => {
+                    if (response.ok) {
+                        location.reload();
+                    } else {
+                        Swal.fire({ icon: 'error', text: "There was an error deleting the message. Please try again." });
+                    }
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                    Swal.fire({ icon: 'error', text: "There was an error deleting the message. Please try again." });
+                });
+        } else {
+            refreshPage();
+        }
+    })
 }
 
-// Requeue message
 (window as any).msg_requeue = (queue_name: string, message_id: string) => {
-    if (confirm("Are you sure you want to requeue this message?")) {
-        // Send a PUT request to the server using the fetch API
-        fetch("/api/queue/" + queue_name + '/message/' + message_id + '/requeue', {
-            method: "PUT"
-        })
-            .then(response => {
-                if (response.ok) {
-                    location.reload();
-                } else {
-                    alert("There was an error requeueing the message. Please try again.");
-                }
+    clearTimeout(refreshIntervalId);
+    Swal.fire({
+        title: 'Are you sure you want to requeue this message?',
+        showDenyButton: true,
+        confirmButtonText: 'Yes',
+        denyButtonText: `No`,
+        background: elementBackground,
+        color: elementColor,
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch("/api/queue/" + queue_name + '/message/' + message_id + '/requeue', {
+                method: "PUT"
             })
-            .catch(error => {
-                console.error("Error:", error);
-                alert("There was an error requeueing the message. Please try again.");
-            });
-    }
+                .then(response => {
+                    if (response.ok) {
+                        location.reload();
+                    } else {
+                        Swal.fire({ icon: 'error', text: "There was an requeueing deleting the message. Please try again." });
+                    }
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                    Swal.fire({ icon: 'error', text: "There was an requeueing deleting the message. Please try again." });
+                });
+        } else {
+            refreshPage();
+        }
+    })
 }
 
-// function refreshPage() {
-//     setTimeout(function () {
-//         location.reload();
-//     }, 5000);
-// }
+refreshPage();
 
-// refreshPage();
 
 const chartValue = (document.getElementById("chartdata") as HTMLInputElement).value;
 let chartData = JSON.parse(chartValue);
@@ -69,6 +95,9 @@ const chartLabels = Array.from({ length: currentData.length }, (_, i) => {
 
 // create chart
 const ctx = document.getElementById('message-count-chart') as HTMLCanvasElement;
+Chart.defaults.backgroundColor = 'transparent';
+Chart.defaults.borderColor = 'rgba(255,255,255, .05)';
+Chart.defaults.color = elementColor;
 const chart = new Chart(ctx, {
     type: 'line',
     data: {
@@ -76,24 +105,25 @@ const chart = new Chart(ctx, {
         datasets: [{
             label: 'Current',
             data: currentData,
-            backgroundColor: 'rgba(42, 157, 143, 0.2)',
             borderColor: 'rgba(42, 157, 143, 1)',
+            backgroundColor: 'rgba(42, 157, 143, 1)',
             borderWidth: 1
         }, {
             label: 'Delayed',
             data: delayedData,
-            backgroundColor: 'rgba(255, 193, 7, 0.2)',
             borderColor: 'rgba(255, 193, 7, 1)',
+            backgroundColor: 'rgba(255, 193, 7, 1)',
             borderWidth: 1
         }, {
             label: 'Failed',
             data: failedData,
-            backgroundColor: 'rgba(255, 59, 48, 0.2)',
             borderColor: 'rgba(255, 59, 48, 1)',
+            backgroundColor: 'rgba(255, 59, 48, 1)',
             borderWidth: 1
         }]
     },
     options: {
+        animation: false,
         scales: {
             y: {
                 beginAtZero: true,

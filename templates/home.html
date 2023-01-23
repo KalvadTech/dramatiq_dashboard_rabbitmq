@@ -11,11 +11,11 @@
         <div class="card queue-card">
             <div class="card-body">
                 <h5 class="card-title">All queue chart</h5>
-            <div class="chart">
+            <div class="chart" style="position: relative; min-height:30vh; width:100%">
                 <canvas id="message-count-chart"></canvas>
                 <input type="hidden" name="chartdata" id="chartdata" value='{{chart_data|tojson|safe}}'></input>
             </div>
-                <h5 class="card-title">All queue Stats</h5>
+                <h5 class="card-title mt-3">All queue Stats</h5>
                 <p> The number of messages in all current queues is: {{ queues["all_messages_in_queues"] }} </p>
                 {% set _dummy=queues.pop("all_messages_in_queues") %}
                 <p> The number of messages in all delay queues is: {{ queues["all_messages_in_delay_queues"] }} </p>

@@ -29,17 +29,15 @@ class Rollup(ExternalTool):
     def input(self, infile, outfile, **kwargs):
         args = ["node_modules/.bin/rollup"]
         args.append("--format=iife")
-        args.append("-p=@rollup/plugin-node-resolve,@rollup/plugin-typescript")
+        args.append(
+            "-p=@rollup/plugin-node-resolve,@rollup/plugin-typescript,@rollup/plugin-commonjs"
+        )
         args.append("-m=inline")
         args.append(kwargs["source_path"])
         self.subprocess(args, outfile, infile)
 
 
-ts_all = Bundle(
-    "script.ts",
-    filters=(Rollup()),
-    output=".webassets-cache/script.js",
-)
+ts_all = Bundle("script.ts", filters=(Rollup()), output=".webassets-cache/script.js")
 assets.register("ts_all", ts_all)
 # === fancy assets end
 
@@ -214,7 +212,10 @@ app.register_api(api)
 @app.route("/")
 @app.route("/queue")
 def all_queues():
-    queues = requests.get(f"{request.url_root}api/queue").json()
+    try:
+        queues = requests.get(f"{request.url_root}api/queue").json()
+    except requests.exceptions.JSONDecodeError:
+        return "<p>please enter Environment variables</p>"
     chart = queues["chart_data"]
     del queues["chart_data"]
     return render_template("home.html", queues=queues, chart_data=chart)
@@ -222,6 +223,7 @@ def all_queues():
 
 @app.route("/queue/<queue_name>/current")
 def current_details(queue_name):
+    requests.get(f"{request.url_root}api/queue")
     queues = requests.get(f"{request.url_root}api/queue/{queue_name}").json()
     return render_template(
         "queue.html",
@@ -235,6 +237,7 @@ def current_details(queue_name):
 
 @app.route("/queue/<queue_name>/delayed")
 def delayed_details(queue_name):
+    requests.get(f"{request.url_root}api/queue").json()
     queues = requests.get(f"{request.url_root}api/queue/{queue_name}").json()
     return render_template(
         "queue.html",
@@ -248,6 +251,7 @@ def delayed_details(queue_name):
 
 @app.route("/queue/<queue_name>/failed")
 def failed_details(queue_name):
+    requests.get(f"{request.url_root}api/queue").json()
     queues = requests.get(f"{request.url_root}api/queue/{queue_name}").json()
     return render_template(
         "queue.html",
@@ -262,6 +266,7 @@ def failed_details(queue_name):
 
 @app.route("/queue/<queue_name>/message/<message_id>")
 def msg_details(queue_name, message_id):
+    requests.get(f"{request.url_root}api/queue").json()
     message = requests.get(
         f"{request.url_root}api/queue/{queue_name}/message/{message_id}"
     ).json()

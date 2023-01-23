@@ -88,9 +88,7 @@ class Rabbitmq:
         chart_dead.append(all_msg_dead)
         if chart_current.__len__() >= 100:
             chart_current.pop(0)
-        if chart_delay.__len__() >= 100:
             chart_delay.pop(0)
-        if chart_dead.__len__() >= 100:
             chart_dead.pop(0)
         chart_data = {
             "chart_current": chart_current,
@@ -305,12 +303,12 @@ def time_since_timestamp(timestamp):
     current_time = current_millis()
     time_diff = current_time - timestamp
     diff = datetime.timedelta(milliseconds=time_diff)
-    s = diff.seconds
-    if s <= 60:
-        return str(s) + "s ago"
-    elif s > 60 and s <= 3600:
-        return str(s // 60) + "m ago"
-    elif s > 3600 and s <= 86400:
-        return str(s // 3600) + "h ago"
-    elif s > 86400:
-        return str(s // 86400) + "d ago"
+    total_seconds = diff.total_seconds()
+    if total_seconds <= 60:
+        return str(int(total_seconds)) + "s ago"
+    elif total_seconds > 60 and total_seconds <= 3600:
+        return str(int(total_seconds // 60)) + "m ago"
+    elif total_seconds > 3600 and total_seconds <= 86400:
+        return str(int(total_seconds // 3600)) + "h ago"
+    elif total_seconds > 86400:
+        return str(int(total_seconds // 86400)) + "d ago"

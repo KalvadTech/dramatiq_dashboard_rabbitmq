@@ -8,9 +8,25 @@ $color: #cccccc;
 $box-shadow: 0 .5rem 1rem rgba($color, .15);
 $link-color: #1f499e;
 
-@import url("https://fonts.googleapis.com/css2?family=Roboto&display=swap");
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;500&family=Roboto:wght@300;400;500&display=swap');
 @import "node_modules/bootstrap/scss/bootstrap";
-@import "node_modules/bootstrap-icons/font/bootstrap-icons.css";
+@import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css");
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: 'Poppins';
+    font-weight: bold
+}
+
+.body {
+    background-color: $background-color;
+    font-family: 'Roboto';
+    color: $color;
+}
 
 .queue-card {
     @extend .card;
@@ -21,7 +37,6 @@ $link-color: #1f499e;
     border-radius: $border-radius;
 
     &:hover {
-        transform: scale(1.02);
         background-color: #292929;
     }
 
@@ -35,13 +50,6 @@ $link-color: #1f499e;
         margin-bottom: 1rem;
     }
 
-}
-
-
-.body {
-    background-color: $background-color;
-    font-family: 'Roboto';
-    color: $color;
 }
 
 .table {
@@ -82,10 +90,18 @@ $link-color: #1f499e;
 }
 
 .btn-group {
+    @extend .btn-group;
+
     a {
         &.active {
             transform: scale(1.1);
-            box-shadow: 2px 2px 5px $color;
+            font-weight: bold;
+            border-radius: $border-radius !important;
+            z-index: 2 !important;
+        }
+
+        &:not(.active) {
+            filter: grayscale(1);
         }
     }
 }
@@ -96,5 +112,5 @@ $link-color: #1f499e;
 }
 
 .chart {
-    background-color: white;
+    border-radius: $border-radius;
 }
