@@ -9,4 +9,3 @@ flask-openapi3==2.2.2
 gunicorn==20.1.0
 Flask-Assets==2.0
 libsass==0.22.0
-

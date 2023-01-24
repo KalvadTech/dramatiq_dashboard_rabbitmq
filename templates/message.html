@@ -54,5 +54,6 @@
     <div class="text-right">
         <button class="btn btn-danger" onclick="msg_delete('{{message.queue_name}}', '{{message.message_id}}')">Delete</button>
     </div>
+    <input type="hidden" name="credentials" id="credentials" value='{{credentials|tojson|safe}}'></input>
 </div>
 {% endblock %}

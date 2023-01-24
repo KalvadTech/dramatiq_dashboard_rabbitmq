@@ -63,6 +63,7 @@
             </tr>
             {% endfor %}
             {% endfor %}
+            <input type="hidden" name="credentials" id="credentials" value='{{credentials|tojson|safe}}'></input>
         </tbody>
     </table>
 </div>

@@ -7,7 +7,7 @@ const elementStyle = window.getComputedStyle(document.body, null);
 const elementColor = elementStyle.getPropertyValue('color');
 const elementBackground = elementStyle.getPropertyValue('background');
 
-let refreshIntervalId: number;
+let refreshIntervalId: ReturnType<typeof setTimeout>;
 
 function refreshPage() {
     refreshIntervalId = setTimeout(function () {
@@ -26,19 +26,33 @@ function refreshPage() {
         color: elementColor,
     }).then((result) => {
         if (result.isConfirmed) {
-            fetch("/api/queue/" + queue_name + '/message/' + message_id, {
-                method: "DELETE"
-            })
+            // Create a headers object and add the Authorization header
+            const headers = new Headers();
+            const auth = (document.getElementById("credentials") as HTMLInputElement).value;
+            headers.append('Authorization', `Basic ${auth}`);
+            const options = {
+                method: "DELETE",
+                headers: headers
+            }
+            fetch("/api/queue/" + queue_name + '/message/' + message_id, options)
                 .then(response => {
                     if (response.ok) {
                         location.reload();
                     } else {
-                        Swal.fire({ icon: 'error', text: "There was an error deleting the message. Please try again." });
+                        Swal.fire({
+                            icon: 'error', text: "There was an error deleting the message. Please try again.",
+                            background: elementBackground,
+                            color: elementColor,
+                        });
                     }
                 })
                 .catch(error => {
                     console.error("Error:", error);
-                    Swal.fire({ icon: 'error', text: "There was an error deleting the message. Please try again." });
+                    Swal.fire({
+                        icon: 'error', text: "There was an error deleting the message. Please try again.",
+                        background: elementBackground,
+                        color: elementColor,
+                    });
                 });
         } else {
             refreshPage();
@@ -57,19 +71,33 @@ function refreshPage() {
         color: elementColor,
     }).then((result) => {
         if (result.isConfirmed) {
-            fetch("/api/queue/" + queue_name + '/message/' + message_id + '/requeue', {
-                method: "PUT"
-            })
+            // Create a headers object and add the Authorization header
+            const headers = new Headers();
+            const auth = (document.getElementById("credentials") as HTMLInputElement).value;
+            headers.append('Authorization', `Basic ${auth}`);
+            const options = {
+                method: "PUT",
+                headers: headers
+            }
+            fetch("/api/queue/" + queue_name + '/message/' + message_id + '/requeue', options)
                 .then(response => {
                     if (response.ok) {
                         location.reload();
                     } else {
-                        Swal.fire({ icon: 'error', text: "There was an requeueing deleting the message. Please try again." });
+                        Swal.fire({
+                            icon: 'error', text: "There was an requeueing deleting the message. Please try again.",
+                            background: elementBackground,
+                            color: elementColor,
+                        });
                     }
                 })
                 .catch(error => {
                     console.error("Error:", error);
-                    Swal.fire({ icon: 'error', text: "There was an requeueing deleting the message. Please try again." });
+                    Swal.fire({
+                        icon: 'error', text: "There was an requeueing deleting the message. Please try again.",
+                        background: elementBackground,
+                        color: elementColor,
+                    });
                 });
         } else {
             refreshPage();
@@ -81,10 +109,10 @@ refreshPage();
 
 
 const chartValue = (document.getElementById("chartdata") as HTMLInputElement).value;
-let chartData = JSON.parse(chartValue);
-let currentData = chartData["chart_current"];
-let delayedData = chartData["chart_delay"];
-let failedData = chartData["chart_dead"];
+const chartData = JSON.parse(chartValue);
+const currentData = chartData["chart_current"];
+const delayedData = chartData["chart_delay"];
+const failedData = chartData["chart_dead"];
 const currentTime = new Date();
 const chartLabels = Array.from({ length: currentData.length }, (_, i) => {
     const time = new Date(currentTime);

@@ -7,6 +7,7 @@ from flask_openapi3 import Info, Tag
 from flask_openapi3 import OpenAPI, APIBlueprint
 from pydantic import BaseModel, Field
 from loguru import logger
+import base64
 
 
 info = Info(title="dramatiq dashboard API documentation", version="1.0.0")
@@ -55,6 +56,8 @@ RABBITMQ_VHOST = conf.vhost
 DEBUG = conf.debug
 RABBITMQ_HOST = conf.host
 RABBITMQ_PORT = conf.port
+AUTH_USER = conf.auth_user
+AUTH_PASS = conf.auth_pass
 
 
 broker = Rabbitmq(
@@ -108,13 +111,13 @@ class MessagePath(BaseModel):
 
 class MessageResponse(BaseModel):
     actor_name: str = Field(description="actor name")
-    args: dict = Field([], description="The vaules passed to the actor")
+    args: dict = Field([], description="The values passed to the actor")
     kwargs: dict = Field({}, description="the keyword arguments passed to the actor")
     created_at: int = Field(0, description="how long ago the message was created")
     message_id: str = Field(description="the uuid of the message")
     message_timestamp: int = Field(
         0,
-        description="the time that the message was created which is a unix timestamp in miliseconds",
+        description="the time that the message was created which is a unix timestamp in milliseconds",
     )
     retries: int = Field({}, description="number of retries for this job")
     traceback: str = Field(description="The error given from the worker")
@@ -139,6 +142,21 @@ class StatusResponse(BaseModel):
     status: str = Field(description="The status of the operation")
 
 
+def check_basic_auth(request):
+    encoded_credentials = request.headers.get("Authorization").split()[-1]
+
+    # decode the encoded credentials
+    decoded_credentials = base64.b64decode(encoded_credentials).decode().split(":")
+    username = decoded_credentials[0]
+    password = decoded_credentials[1]
+
+    # check the username and password against the ones stored in your system
+    if username == "mouhand" and password == "mouhand":
+        return "Authentication succeeded", 200
+    else:
+        return "Authentication failed", 401
+
+
 @api.get("/")
 def api_main_page():
     return {"status": "welcome to the main page"}
@@ -152,7 +170,12 @@ def api_main_page():
     responses={"200": QueueResponse},
 )
 def api_queues():
-    return broker.get_all_queues()
+    status, code = check_basic_auth(request)
+    # check the username and password against the ones stored in your system
+    if code == 200:
+        return broker.get_all_queues(), 200
+    else:
+        return "Authentication failed", 401
 
 
 @api.get(
@@ -167,7 +190,12 @@ def api_messages_of_queue(path: QueuePath):
         path.queue_name
     ):
         return {"Status": "Please enter the current queue name"}
-    return broker.get_messages_of_queue(path.queue_name)
+    status, code = check_basic_auth(request)
+    # check the username and password against the ones stored in your system
+    if code == 200:
+        return broker.get_messages_of_queue(path.queue_name), 200
+    else:
+        return "Authentication failed", 401
 
 
 @api.get(
@@ -178,7 +206,12 @@ def api_messages_of_queue(path: QueuePath):
     responses={"200": MessageResponse},
 )
 def api_msg_details(path: MessagePath):
-    return broker.get_message_details(path.queue_name, path.message_id)
+    status, code = check_basic_auth(request)
+    # check the username and password against the ones stored in your system
+    if code == 200:
+        return broker.get_message_details(path.queue_name, path.message_id), 200
+    else:
+        return "Authentication failed", 401
 
 
 @api.put(
@@ -191,7 +224,17 @@ def api_msg_details(path: MessagePath):
 def api_requeue_msg(path: MessagePath):
     if path.queue_name == q_name(path.queue_name):
         return {"Status": "Please enter a delay or dead queue name"}
-    return broker.requeue_msg(path.queue_name, q_name(path.queue_name), path.message_id)
+    status, code = check_basic_auth(request)
+    # check the username and password against the ones stored in your system
+    if code == 200:
+        return (
+            broker.requeue_msg(
+                path.queue_name, q_name(path.queue_name), path.message_id
+            ),
+            200,
+        )
+    else:
+        return "Authentication failed", 401
 
 
 @api.delete(
@@ -202,20 +245,30 @@ def api_requeue_msg(path: MessagePath):
     responses={"200": StatusResponse},
 )
 def api_msg_delete(path: MessagePath):
-    logger.debug(path.queue_name, path.message_id)
-    return broker.delete_msg(path.queue_name, path.message_id)
+    status, code = check_basic_auth(request)
+    # check the username and password against the ones stored in your system
+    if code == 200:
+        return broker.delete_msg(path.queue_name, path.message_id), 200
+    else:
+        return "Authentication failed", 401
 
 
 app.register_api(api)
+
+auth = f"{AUTH_USER}:{AUTH_PASS}"
+credentials = base64.b64encode(bytes(auth, "utf-8")).decode()
+
+# create a headers object with the encoded credentials
+headers = {"Authorization": "Basic " + credentials}
 
 
 @app.route("/")
 @app.route("/queue")
 def all_queues():
     try:
-        queues = requests.get(f"{request.url_root}api/queue").json()
+        queues = requests.get(f"{request.url_root}api/queue", headers=headers).json()
     except requests.exceptions.JSONDecodeError:
-        return "<p>please enter Environment variables</p>"
+        return "<p>please enter Environment variables and basic auth credentials correctly</p>"
     chart = queues["chart_data"]
     del queues["chart_data"]
     return render_template("home.html", queues=queues, chart_data=chart)
@@ -223,8 +276,10 @@ def all_queues():
 
 @app.route("/queue/<queue_name>/current")
 def current_details(queue_name):
-    requests.get(f"{request.url_root}api/queue")
-    queues = requests.get(f"{request.url_root}api/queue/{queue_name}").json()
+    requests.get(f"{request.url_root}api/queue", headers=headers)
+    queues = requests.get(
+        f"{request.url_root}api/queue/{queue_name}", headers=headers
+    ).json()
     return render_template(
         "queue.html",
         queue=queues["current_queue_msg"],
@@ -232,13 +287,16 @@ def current_details(queue_name):
         queue_name=queue_name,
         current_page="current",
         requeue=False,
+        credentials=credentials,
     )
 
 
 @app.route("/queue/<queue_name>/delayed")
 def delayed_details(queue_name):
-    requests.get(f"{request.url_root}api/queue").json()
-    queues = requests.get(f"{request.url_root}api/queue/{queue_name}").json()
+    requests.get(f"{request.url_root}api/queue", headers=headers)
+    queues = requests.get(
+        f"{request.url_root}api/queue/{queue_name}", headers=headers
+    ).json()
     return render_template(
         "queue.html",
         queue=queues["delay_queue_msg"],
@@ -246,13 +304,16 @@ def delayed_details(queue_name):
         queue_name=queue_name,
         current_page="delay",
         requeue=True,
+        credentials=credentials,
     )
 
 
 @app.route("/queue/<queue_name>/failed")
 def failed_details(queue_name):
-    requests.get(f"{request.url_root}api/queue").json()
-    queues = requests.get(f"{request.url_root}api/queue/{queue_name}").json()
+    requests.get(f"{request.url_root}api/queue", headers=headers)
+    queues = requests.get(
+        f"{request.url_root}api/queue/{queue_name}", headers=headers
+    ).json()
     return render_template(
         "queue.html",
         queue=queues["dead_queue_msg"],
@@ -261,14 +322,16 @@ def failed_details(queue_name):
         dead_queue_name=xq_name(queue_name),
         current_page="dead",
         requeue=True,
+        credentials=credentials,
     )
 
 
 @app.route("/queue/<queue_name>/message/<message_id>")
 def msg_details(queue_name, message_id):
-    requests.get(f"{request.url_root}api/queue").json()
+    requests.get(f"{request.url_root}api/queue", headers=headers)
     message = requests.get(
-        f"{request.url_root}api/queue/{queue_name}/message/{message_id}"
+        f"{request.url_root}api/queue/{queue_name}/message/{message_id}",
+        headers=headers,
     ).json()
     try:
         if message["status"] != None:
@@ -278,7 +341,12 @@ def msg_details(queue_name, message_id):
     except KeyError:
         pass
 
-    return render_template("message.html", message=message, queue_name=queue_name)
+    return render_template(
+        "message.html",
+        message=message,
+        queue_name=queue_name,
+        credentials=credentials,
+    )
 
 
 if __name__ == "__main__":

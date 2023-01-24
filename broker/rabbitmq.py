@@ -4,6 +4,9 @@ from dramatiq.common import dq_name, q_name, xq_name, current_millis
 import pika
 from loguru import logger
 import datetime
+import configuration.config as config
+
+conf = config.Config()
 
 chart_current = []
 chart_delay = []
@@ -40,7 +43,7 @@ class Rabbitmq:
         )
 
     def get_all_queues(self):
-        """Get all of the queues on the specfic vhost
+        """Get all of the queues on the specific vhost
 
         Returns:
             dict: A dict that has the queue names and number of messages for each queue
@@ -86,7 +89,7 @@ class Rabbitmq:
         chart_current.append(all_msg_current)
         chart_delay.append(all_msg_delay)
         chart_dead.append(all_msg_dead)
-        if chart_current.__len__() >= 100:
+        if chart_current.__len__() >= (conf.chart_time * 60 / 5):
             chart_current.pop(0)
             chart_delay.pop(0)
             chart_dead.pop(0)
@@ -124,14 +127,14 @@ class Rabbitmq:
         return queue
 
     def get_message_details(self, queue_name, message_id):
-        """Gets the details of a specfic message
+        """Gets the details of a specific message
 
         Args:
             queue_name (str): The name of the queue
             message_id (str): The id of the message as given by dramatiq
 
         Returns:
-            dict: the detail of the specfic message
+            dict: the detail of the specific message
         """
         # Get the messages in queue
         messages = self.get_queue(queue_name)
@@ -149,7 +152,7 @@ class Rabbitmq:
                 )
                 message_json[
                     "message_timestamp"
-                ] = f"{message_timestamp} ({message_date})"
+                ] = f"{message_timestamp} ({message_date.astimezone()})"
 
                 try:
                     message_json["retries"] = message_json["options"]["retries"]
@@ -171,7 +174,7 @@ class Rabbitmq:
             destination_queue (str): The queue to add the messages to
             message_id (str): The id of the message as given by dramatiq
         Returns:
-            dict: Msessage telling us that it finished processing
+            dict: Message telling us that it finished processing
         """
         # Connect to RabbitMQ server
         connection = pika.BlockingConnection(self.parameters)
@@ -222,7 +225,7 @@ class Rabbitmq:
             queue_name (str): The queue to remove the messages from
             message_id (str): The id of the message as given by dramatiq
         Returns:
-            Dict: Msessages telling us that it finished processing
+            Dict: Messages telling us that it finished processing
         """
         # Connect to RabbitMQ server
         connection = pika.BlockingConnection(self.parameters)
@@ -263,7 +266,7 @@ class Rabbitmq:
             list_of_msg (list): list of msg inside queue
 
         Returns:
-            current_queue_send (list): a formated list of msg inside queue
+            current_queue_send (list): a formatted list of msg inside queue
         """
         current_queue_send = []
         for msg in list_of_msg:
@@ -279,7 +282,7 @@ class Rabbitmq:
         return current_queue_send
 
     def get_queue(self, queue_name):
-        """Gets all the messages from a specfic queue
+        """Gets all the messages from a specific queue
 
         Args:
             queue_name (str): The name of the queue
@@ -300,6 +303,14 @@ class Rabbitmq:
 
 
 def time_since_timestamp(timestamp):
+    """Calculates the amount of time that has passed from a UNIX timestamp in milliseconds
+
+    Args:
+        timestamp (int): UNIX timestamp in milliseconds
+
+    Returns:
+        str: The amount of time that has passed since the timestamp's creation
+    """
     current_time = current_millis()
     time_diff = current_time - timestamp
     diff = datetime.timedelta(milliseconds=time_diff)
