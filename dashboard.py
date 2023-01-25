@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 from loguru import logger
 import base64
 
+conf = config.Config()
 
 info = Info(title="dramatiq dashboard API documentation", version="1.0.0")
 app = OpenAPI(__name__, info=info)
@@ -17,7 +18,7 @@ app = OpenAPI(__name__, info=info)
 from flask_assets import Bundle, Environment
 from webassets.filter import ExternalTool
 
-app.config["ASSETS_DEBUG"] = True
+app.config["ASSETS_DEBUG"] = conf.debug
 assets = Environment(app)
 assets.url = app.static_url_path
 scss_all = Bundle("style.scss", filters="libsass", output=".webassets-cache/style.css")
@@ -46,8 +47,6 @@ api = APIBlueprint("queue", __name__, url_prefix="/api")
 
 queue_tag = Tag(name="queue", description="queue endpoints")
 message_tag = Tag(name="message", description="message endpoints")
-
-conf = config.Config()
 
 RABBITMQ_API_URL = conf.base_url
 RABBITMQ_USER = conf.rabbit_user
@@ -150,7 +149,6 @@ def check_basic_auth(request):
     username = decoded_credentials[0]
     password = decoded_credentials[1]
 
-    # check the username and password against the ones stored in your system
     if username == "mouhand" and password == "mouhand":
         return "Authentication succeeded", 200
     else:
@@ -171,7 +169,6 @@ def api_main_page():
 )
 def api_queues():
     status, code = check_basic_auth(request)
-    # check the username and password against the ones stored in your system
     if code == 200:
         return broker.get_all_queues(), 200
     else:
@@ -191,7 +188,6 @@ def api_messages_of_queue(path: QueuePath):
     ):
         return {"Status": "Please enter the current queue name"}
     status, code = check_basic_auth(request)
-    # check the username and password against the ones stored in your system
     if code == 200:
         return broker.get_messages_of_queue(path.queue_name), 200
     else:
@@ -207,7 +203,6 @@ def api_messages_of_queue(path: QueuePath):
 )
 def api_msg_details(path: MessagePath):
     status, code = check_basic_auth(request)
-    # check the username and password against the ones stored in your system
     if code == 200:
         return broker.get_message_details(path.queue_name, path.message_id), 200
     else:
@@ -225,7 +220,6 @@ def api_requeue_msg(path: MessagePath):
     if path.queue_name == q_name(path.queue_name):
         return {"Status": "Please enter a delay or dead queue name"}
     status, code = check_basic_auth(request)
-    # check the username and password against the ones stored in your system
     if code == 200:
         return (
             broker.requeue_msg(
@@ -246,7 +240,6 @@ def api_requeue_msg(path: MessagePath):
 )
 def api_msg_delete(path: MessagePath):
     status, code = check_basic_auth(request)
-    # check the username and password against the ones stored in your system
     if code == 200:
         return broker.delete_msg(path.queue_name, path.message_id), 200
     else:

@@ -1,5 +1,6 @@
 import { Chart, LineController, LineElement, CategoryScale, Tooltip, Legend, PointElement, Filler, LinearScale } from 'chart.js';
 import Swal from 'sweetalert2';
+import $ from 'jquery';
 
 Chart.register(LineController, LineElement, CategoryScale, Tooltip, Legend, PointElement, Filler, LinearScale);
 
@@ -11,7 +12,12 @@ let refreshIntervalId: ReturnType<typeof setTimeout>;
 
 function refreshPage() {
     refreshIntervalId = setTimeout(function () {
-        location.reload();
+        $.ajax({
+            url: window.location.href,
+            success: function (data) {
+                $('#dynamic-content').html(data);
+            }
+        });
     }, 5000);
 }
 
@@ -37,7 +43,12 @@ function refreshPage() {
             fetch("/api/queue/" + queue_name + '/message/' + message_id, options)
                 .then(response => {
                     if (response.ok) {
-                        location.reload();
+                        $.ajax({
+                            url: window.location.href,
+                            success: function (data) {
+                                $('#dynamic-content').html(data);
+                            }
+                        });
                     } else {
                         Swal.fire({
                             icon: 'error', text: "There was an error deleting the message. Please try again.",
@@ -82,7 +93,12 @@ function refreshPage() {
             fetch("/api/queue/" + queue_name + '/message/' + message_id + '/requeue', options)
                 .then(response => {
                     if (response.ok) {
-                        location.reload();
+                        $.ajax({
+                            url: window.location.href,
+                            success: function (data) {
+                                $('#dynamic-content').html(data);
+                            }
+                        });
                     } else {
                         Swal.fire({
                             icon: 'error', text: "There was an requeueing deleting the message. Please try again.",
@@ -107,59 +123,61 @@ function refreshPage() {
 
 refreshPage();
 
+if (document.getElementById('message-count-chart')) {
 
-const chartValue = (document.getElementById("chartdata") as HTMLInputElement).value;
-const chartData = JSON.parse(chartValue);
-const currentData = chartData["chart_current"];
-const delayedData = chartData["chart_delay"];
-const failedData = chartData["chart_dead"];
-const currentTime = new Date();
-const chartLabels = Array.from({ length: currentData.length }, (_, i) => {
-    const time = new Date(currentTime);
-    time.setSeconds(time.getSeconds() - (currentData.length - i - 1) * 5);
-    return time.toLocaleTimeString();
-});
+    const chartValue = (document.getElementById("chartdata") as HTMLInputElement).value;
+    const chartData = JSON.parse(chartValue);
+    const currentData = chartData["chart_current"];
+    const delayedData = chartData["chart_delay"];
+    const failedData = chartData["chart_dead"];
+    const currentTime = new Date();
+    const chartLabels = Array.from({ length: currentData.length }, (_, i) => {
+        const time = new Date(currentTime);
+        time.setSeconds(time.getSeconds() - (currentData.length - i - 1) * 5);
+        return time.toLocaleTimeString();
+    });
 
 
-// create chart
-const ctx = document.getElementById('message-count-chart') as HTMLCanvasElement;
-Chart.defaults.backgroundColor = 'transparent';
-Chart.defaults.borderColor = 'rgba(255,255,255, .05)';
-Chart.defaults.color = elementColor;
-const chart = new Chart(ctx, {
-    type: 'line',
-    data: {
-        labels: chartLabels,
-        datasets: [{
-            label: 'Current',
-            data: currentData,
-            borderColor: 'rgba(42, 157, 143, 1)',
-            backgroundColor: 'rgba(42, 157, 143, 1)',
-            borderWidth: 1
-        }, {
-            label: 'Delayed',
-            data: delayedData,
-            borderColor: 'rgba(255, 193, 7, 1)',
-            backgroundColor: 'rgba(255, 193, 7, 1)',
-            borderWidth: 1
-        }, {
-            label: 'Failed',
-            data: failedData,
-            borderColor: 'rgba(255, 59, 48, 1)',
-            backgroundColor: 'rgba(255, 59, 48, 1)',
-            borderWidth: 1
-        }]
-    },
-    options: {
-        animation: false,
-        scales: {
-            y: {
-                beginAtZero: true,
-                ticks: {
-                    callback: function (value: number) { if (value % 1 === 0) { return value; } }
+    // create chart
+    const ctx = document.getElementById('message-count-chart') as HTMLCanvasElement;
+    Chart.defaults.backgroundColor = 'transparent';
+    Chart.defaults.borderColor = 'rgba(255,255,255, .05)';
+    Chart.defaults.color = elementColor;
+    const chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: chartLabels,
+            datasets: [{
+                label: 'Current',
+                data: currentData,
+                borderColor: 'rgba(42, 157, 143, 1)',
+                backgroundColor: 'rgba(42, 157, 143, 1)',
+                borderWidth: 1
+            }, {
+                label: 'Delayed',
+                data: delayedData,
+                borderColor: 'rgba(255, 193, 7, 1)',
+                backgroundColor: 'rgba(255, 193, 7, 1)',
+                borderWidth: 1
+            }, {
+                label: 'Failed',
+                data: failedData,
+                borderColor: 'rgba(255, 59, 48, 1)',
+                backgroundColor: 'rgba(255, 59, 48, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            animation: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function (value: number) { if (value % 1 === 0) { return value; } }
+                    }
                 }
-            }
 
+            }
         }
-    }
-});
+    });
+};

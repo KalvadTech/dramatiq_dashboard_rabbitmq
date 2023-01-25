@@ -11,15 +11,17 @@
     {% assets "scss_all" %}
         <link rel=stylesheet href="{{ ASSET_URL }}">
     {% endassets %}
+
 </head>
 
-<body class="body">
+<body class="body" id="dynamic-content">
+
     <header class="navbar mb-5">
         <div class="container">
             <a class="navbar-brand" href="/">Dramatiq Dashboard</a>
         </div>
     </header>
-
+    
     <div class="container">
         <main>
             {% block content %}
