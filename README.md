@@ -42,7 +42,7 @@ make prod
 | DEBUG              | Boolean | Debug setting                                                | &nbsp;        |
 | AUTH\_USER         | String  | basic auth username                                          | &nbsp;        |
 | AUTH\_PASS         | String  | basic auth username                                          | &nbsp;        |
-| chart\_time        | Integer | How many minutes should be shown in the chart                | 3             |
+| CHART\_TIME        | Integer | How many minutes should be shown in the chart                | 3             |
 
 ## OpenAPI documentation
 
