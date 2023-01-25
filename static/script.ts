@@ -11,6 +11,7 @@ const elementBackground = elementStyle.getPropertyValue('background');
 let refreshIntervalId: ReturnType<typeof setTimeout>;
 
 function refreshPage() {
+    // refreshes the page every 5 seconds using ajax
     refreshIntervalId = setTimeout(function () {
         $.ajax({
             url: window.location.href,
@@ -22,6 +23,8 @@ function refreshPage() {
 }
 
 (window as any).msg_delete = (queue_name: string, message_id: string) => {
+    // stops the refresh time and shows an alert to the user if the users presses yes then delete the
+    // msg from the queue and refresh the page using ajax, if an error is encountered show an error alert
     clearTimeout(refreshIntervalId);
     Swal.fire({
         title: 'Are you sure you want to delete this message?',
@@ -72,6 +75,8 @@ function refreshPage() {
 }
 
 (window as any).msg_requeue = (queue_name: string, message_id: string) => {
+    // stops the refresh time and shows an alert to the user if the users presses yes then requeue the
+    // msg and refresh the page using ajax, if an error is encountered show an error alert
     clearTimeout(refreshIntervalId);
     Swal.fire({
         title: 'Are you sure you want to requeue this message?',
@@ -124,6 +129,7 @@ function refreshPage() {
 refreshPage();
 
 if (document.getElementById('message-count-chart')) {
+    // if the chart element exists inside the page then render the chart
 
     const chartValue = (document.getElementById("chartdata") as HTMLInputElement).value;
     const chartData = JSON.parse(chartValue);

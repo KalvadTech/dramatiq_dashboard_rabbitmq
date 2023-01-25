@@ -142,6 +142,14 @@ class StatusResponse(BaseModel):
 
 
 def check_basic_auth(request):
+    """Decodes the user name and password that were given and checks if they are correct
+
+    Args:
+        request: The current request
+
+    Returns:
+        Authorization
+    """
     encoded_credentials = request.headers.get("Authorization").split()[-1]
 
     # decode the encoded credentials
@@ -267,6 +275,7 @@ def all_queues():
     return render_template("home.html", queues=queues, chart_data=chart)
 
 
+@app.route("/queue/<queue_name>")
 @app.route("/queue/<queue_name>/current")
 def current_details(queue_name):
     requests.get(f"{request.url_root}api/queue", headers=headers)
