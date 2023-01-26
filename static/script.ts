@@ -46,12 +46,7 @@ function refreshPage() {
             fetch("/api/queue/" + queue_name + '/message/' + message_id, options)
                 .then(response => {
                     if (response.ok) {
-                        $.ajax({
-                            url: window.location.href,
-                            success: function (data) {
-                                $('#dynamic-content').html(data);
-                            }
-                        });
+                        location.reload();
                     } else {
                         Swal.fire({
                             icon: 'error', text: "There was an error deleting the message. Please try again.",
@@ -98,15 +93,10 @@ function refreshPage() {
             fetch("/api/queue/" + queue_name + '/message/' + message_id + '/requeue', options)
                 .then(response => {
                     if (response.ok) {
-                        $.ajax({
-                            url: window.location.href,
-                            success: function (data) {
-                                $('#dynamic-content').html(data);
-                            }
-                        });
+                        location.reload();
                     } else {
                         Swal.fire({
-                            icon: 'error', text: "There was an requeueing deleting the message. Please try again.",
+                            icon: 'error', text: "There was an error requeueing deleting the message. Please try again.",
                             background: elementBackground,
                             color: elementColor,
                         });
@@ -115,7 +105,7 @@ function refreshPage() {
                 .catch(error => {
                     console.error("Error:", error);
                     Swal.fire({
-                        icon: 'error', text: "There was an requeueing deleting the message. Please try again.",
+                        icon: 'error', text: "There was an error requeueing deleting the message. Please try again.",
                         background: elementBackground,
                         color: elementColor,
                     });
