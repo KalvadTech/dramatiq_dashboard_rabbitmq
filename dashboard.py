@@ -328,7 +328,6 @@ def failed_details(queue_name):
     )
 
 
-# test
 @app.route("/queue/<queue_name>/message/<message_id>")
 def msg_details(queue_name, message_id):
     requests.get(f"{request.url_root}api/queue", headers=headers)
