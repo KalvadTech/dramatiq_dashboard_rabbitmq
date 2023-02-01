@@ -1,4 +1,4 @@
-from flask import render_template, request, redirect
+from flask import render_template, request, redirect, jsonify
 import requests
 from broker.rabbitmq import Rabbitmq
 from dramatiq.common import dq_name, q_name, xq_name
@@ -39,7 +39,12 @@ class Rollup(ExternalTool):
         self.subprocess(args, outfile, infile)
 
 
-ts_all = Bundle("script.ts", filters=(Rollup()), output=".webassets-cache/script.js")
+ts_all = Bundle(
+    "scripts/main.ts",
+    filters=(Rollup()),
+    output=".webassets-cache/script.js",
+    depends="**/*.ts",
+)
 assets.register("ts_all", ts_all)
 # === fancy assets end
 
@@ -178,7 +183,7 @@ def api_main_page():
 def api_queues():
     status, code = check_basic_auth(request)
     if code == 200:
-        return broker.get_all_queues(), 200
+        return jsonify(data=broker.get_all_queues()), 200
     else:
         return "Authentication failed", 401
 
@@ -254,6 +259,14 @@ def api_msg_delete(path: MessagePath):
         return "Authentication failed", 401
 
 
+# @app.get("/chart_data")
+# def chart_data():
+#     queues = requests.get(f"{request.url_root}api/queue", headers=headers).json()
+#     chart = queues["chart_data"]
+#     del queues["chart_data"]
+#     return jsonify(chart_data=chart)
+
+
 app.register_api(api)
 
 auth = f"{AUTH_USER}:{AUTH_PASS}"
@@ -270,9 +283,8 @@ def all_queues():
         queues = requests.get(f"{request.url_root}api/queue", headers=headers).json()
     except requests.exceptions.JSONDecodeError:
         return "<p>please enter Environment variables and basic auth credentials correctly</p>"
-    chart = queues["chart_data"]
-    del queues["chart_data"]
-    return render_template("home.html", queues=queues, chart_data=chart)
+    del queues["data"]["chart_data"]
+    return render_template("home.html", queues=queues["data"], credentials=credentials)
 
 
 @app.route("/queue/<queue_name>")

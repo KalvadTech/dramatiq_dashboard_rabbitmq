@@ -77,22 +77,18 @@ class Rabbitmq:
                 dead_queue = requests.get(dead_queue_url, auth=self.auth).json()
 
                 # Update dict_of_queues to have the queue name and the number of messages for the current, delay, and dead queues
+                if "list_of_queues" not in dict_of_queues:
+                    dict_of_queues["list_of_queues"] = {}
+                dict_of_queues["list_of_queues"][queue["name"]] = {
+                    "current_message_count_ready": queue["messages_ready"],
+                    "current_message_count_progress": queue["messages_unacknowledged"],
+                    "delay_message_count_ready": delay_queue["messages_ready"],
+                    "delay_message_count_progress": delay_queue[
+                        "messages_unacknowledged"
+                    ],
+                    "dead_message_count": dead_queue["messages"],
+                }
 
-                dict_of_queues.update(
-                    {
-                        queue["name"]: {
-                            "current_message_count_ready": queue["messages_ready"],
-                            "current_message_count_progress": queue[
-                                "messages_unacknowledged"
-                            ],
-                            "delay_message_count_ready": delay_queue["messages_ready"],
-                            "delay_message_count_progress": delay_queue[
-                                "messages_unacknowledged"
-                            ],
-                            "dead_message_count": dead_queue["messages"],
-                        }
-                    }
-                )
                 all_msg_delay_ready += delay_queue["messages_ready"]
                 all_msg_delay_progress += delay_queue["messages_unacknowledged"]
                 all_msg_dead += dead_queue["messages"]
