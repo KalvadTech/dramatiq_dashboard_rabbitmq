@@ -8,8 +8,10 @@ import configuration.config as config
 
 conf = config.Config()
 
-chart_current = []
-chart_delay = []
+chart_current_ready = []
+chart_current_progress = []
+chart_delay_ready = []
+chart_delay_progress = []
 chart_dead = []
 
 
@@ -49,8 +51,10 @@ class Rabbitmq:
             dict: A dict that has the queue names and number of messages for each queue
         """
         dict_of_queues = {}
-        all_msg_current = 0
-        all_msg_delay = 0
+        all_msg_current_ready = 0
+        all_msg_current_progress = 0
+        all_msg_delay_ready = 0
+        all_msg_delay_progress = 0
         all_msg_dead = 0
         # The url used to get all queues which we send a get request to
         all_queue_url = f"{self.base_url}/queues/{self.vhost}"
@@ -59,7 +63,8 @@ class Rabbitmq:
         for queue in queues:
             if queue["name"] == q_name(queue["name"]):
                 # If the name is valid then increment the all_msg_current and get the delay queue and dead queue
-                all_msg_current += queue["messages"]
+                all_msg_current_ready += queue["messages_ready"]
+                all_msg_current_progress += queue["messages_unacknowledged"]
                 queue_name = queue["name"]
                 delay_queue_url = (
                     f"{self.base_url}/queues/{self.vhost}/{dq_name(queue_name)}"
@@ -76,31 +81,52 @@ class Rabbitmq:
                 dict_of_queues.update(
                     {
                         queue["name"]: {
-                            "current_message_count": queue["messages"],
-                            "delay_message_count": delay_queue["messages"],
+                            "current_message_count_ready": queue["messages_ready"],
+                            "current_message_count_progress": queue[
+                                "messages_unacknowledged"
+                            ],
+                            "delay_message_count_ready": delay_queue["messages_ready"],
+                            "delay_message_count_progress": delay_queue[
+                                "messages_unacknowledged"
+                            ],
                             "dead_message_count": dead_queue["messages"],
                         }
                     }
                 )
-                all_msg_delay += delay_queue["messages"]
+                all_msg_delay_ready += delay_queue["messages_ready"]
+                all_msg_delay_progress += delay_queue["messages_unacknowledged"]
                 all_msg_dead += dead_queue["messages"]
 
         # Update the overall counters
-        chart_current.append(all_msg_current)
-        chart_delay.append(all_msg_delay)
+        chart_current_ready.append(all_msg_current_ready)
+        chart_current_progress.append(all_msg_current_progress)
+        chart_delay_ready.append(all_msg_delay_ready)
+        chart_delay_progress.append(all_msg_delay_progress)
         chart_dead.append(all_msg_dead)
-        if chart_current.__len__() >= (conf.chart_time * 60 / 5):
-            chart_current.pop(0)
-            chart_delay.pop(0)
+        if chart_current_ready.__len__() >= (conf.chart_time * 60 / 5):
+            chart_current_ready.pop(0)
+            chart_current_progress.pop(0)
+            chart_delay_ready.pop(0)
+            chart_delay_progress.pop(0)
             chart_dead.pop(0)
         chart_data = {
-            "chart_current": chart_current,
-            "chart_delay": chart_delay,
+            "chart_current_ready": chart_current_ready,
+            "chart_current_progress": chart_current_progress,
+            "chart_delay_ready": chart_delay_ready,
+            "chart_delay_progress": chart_delay_progress,
             "chart_dead": chart_dead,
         }
         dict_of_queues.update({"chart_data": chart_data})
-        dict_of_queues.update({"all_messages_in_queues": all_msg_current})
-        dict_of_queues.update({"all_messages_in_delay_queues": all_msg_delay})
+        dict_of_queues.update({"all_messages_in_queues_ready": all_msg_current_ready})
+        dict_of_queues.update(
+            {"all_messages_in_queues_progress": all_msg_current_progress}
+        )
+        dict_of_queues.update(
+            {"all_messages_in_delay_queues_ready": all_msg_delay_ready}
+        )
+        dict_of_queues.update(
+            {"all_messages_in_delay_queues_progress": all_msg_delay_progress}
+        )
         dict_of_queues.update({"all_messages_in_dead_letter_queues": all_msg_dead})
 
         return dict_of_queues

@@ -7,6 +7,7 @@ $background-color: #333;
 $color: #cccccc;
 $box-shadow: 0 .5rem 1rem rgba($color, .15);
 $link-color: #1f499e;
+$success: #198754;
 
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;500&family=Roboto:wght@300;400;500&display=swap');
 @import "node_modules/bootstrap/scss/bootstrap";
@@ -113,4 +114,8 @@ h6 {
 
 .chart {
     border-radius: $border-radius;
+}
+
+.text-progress{
+    color: #2a9d8f;
 }

@@ -123,13 +123,15 @@ if (document.getElementById('message-count-chart')) {
 
     const chartValue = (document.getElementById("chartdata") as HTMLInputElement).value;
     const chartData = JSON.parse(chartValue);
-    const currentData = chartData["chart_current"];
-    const delayedData = chartData["chart_delay"];
+    const currentDataReady = chartData["chart_current_ready"];
+    const currentDataProgress = chartData["chart_current_progress"];
+    const delayedDataReady = chartData["chart_delay_ready"];
+    const delayedDataProgress = chartData["chart_delay_progress"];
     const failedData = chartData["chart_dead"];
     const currentTime = new Date();
-    const chartLabels = Array.from({ length: currentData.length }, (_, i) => {
+    const chartLabels = Array.from({ length: currentDataReady.length }, (_, i) => {
         const time = new Date(currentTime);
-        time.setSeconds(time.getSeconds() - (currentData.length - i - 1) * 5);
+        time.setSeconds(time.getSeconds() - (currentDataReady.length - i - 1) * 5);
         return time.toLocaleTimeString();
     });
 
@@ -144,16 +146,28 @@ if (document.getElementById('message-count-chart')) {
         data: {
             labels: chartLabels,
             datasets: [{
-                label: 'Current',
-                data: currentData,
+                label: 'Current(ready)',
+                data: currentDataReady,
+                borderColor: 'rgba(25, 135, 84, 1)',
+                backgroundColor: 'rgba(25, 135, 84, 1)',
+                borderWidth: 1
+            },{
+                label: 'Current(in progress)',
+                data: currentDataProgress,
                 borderColor: 'rgba(42, 157, 143, 1)',
                 backgroundColor: 'rgba(42, 157, 143, 1)',
                 borderWidth: 1
             }, {
-                label: 'Delayed',
-                data: delayedData,
+                label: 'Delayed(ready)',
+                data: delayedDataReady,
                 borderColor: 'rgba(255, 193, 7, 1)',
                 backgroundColor: 'rgba(255, 193, 7, 1)',
+                borderWidth: 1
+            },{
+                label: 'Delayed(in progress)',
+                data: delayedDataProgress,
+                borderColor: 'rgba(211, 84, 0, 1)',
+                backgroundColor: 'rgba(211, 84, 0, 1)',
                 borderWidth: 1
             }, {
                 label: 'Failed',

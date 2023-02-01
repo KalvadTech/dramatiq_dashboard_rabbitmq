@@ -13,10 +13,14 @@
                 <input type="hidden" name="chartdata" id="chartdata" value='{{chart_data|tojson|safe}}'></input>
             </div>
                 <h5 class="card-title mt-3">All queue Stats</h5>
-                <p> The number of messages in all current queues is: {{ queues["all_messages_in_queues"] }} </p>
-                {% set _dummy=queues.pop("all_messages_in_queues") %}
-                <p> The number of messages in all delay queues is: {{ queues["all_messages_in_delay_queues"] }} </p>
-                {% set _dummy=queues.pop("all_messages_in_delay_queues") %}
+                <p> The number of messages in all current queues that are ready: {{ queues["all_messages_in_queues_ready"] }} </p>
+                {% set _dummy=queues.pop("all_messages_in_queues_ready") %}
+                <p> The number of messages in all current queues that are in progress: {{ queues["all_messages_in_queues_progress"] }} </p>
+                {% set _dummy=queues.pop("all_messages_in_queues_progress") %}
+                <p> The number of messages in all delay queues that are ready: {{ queues["all_messages_in_delay_queues_ready"] }} </p>
+                {% set _dummy=queues.pop("all_messages_in_delay_queues_ready") %}
+                <p> The number of messages in all current queues that are in progress: {{ queues["all_messages_in_delay_queues_progress"] }} </p>
+                {% set _dummy=queues.pop("all_messages_in_delay_queues_progress") %}
                 <p> The number of messages in all dead queues is: {{ queues["all_messages_in_dead_letter_queues"] }}
                 </p>
                 {% set _dummy=queues.pop("all_messages_in_dead_letter_queues") %}
@@ -31,8 +35,8 @@
                     <thead>
                         <tr>
                             <th>Queue</th>
-                            <th>Current</th>
-                            <th>Delayed</th>
+                            <th>Current(work in progress)</th>
+                            <th>Delayed(work in progress)</th>
                             <th>Failed</th>
                         </tr>
                     </thead>
@@ -41,8 +45,8 @@
                         <tr>
                             <td><a href="{{ url_for('current_details', queue_name=key) }}"
                                     class="">{{ key }}</a></td>
-                            <td class="text-success">{{queues[key]["current_message_count"]}}</td>
-                            <td class="text-warning">{{queues[key]["delay_message_count"]}}</td>
+                            <td class="text-success">{{queues[key]["current_message_count_ready"]}}({{queues[key]["current_message_count_progress"]}})</td>
+                            <td class="text-warning">{{queues[key]["delay_message_count_ready"]}}({{queues[key]["delay_message_count_progress"]}})</td>
                             <td class="text-danger">{{queues[key]["dead_message_count"]}}</td>
                         </tr>
                         {% endfor %}
