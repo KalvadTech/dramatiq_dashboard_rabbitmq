@@ -259,14 +259,6 @@ def api_msg_delete(path: MessagePath):
         return "Authentication failed", 401
 
 
-# @app.get("/chart_data")
-# def chart_data():
-#     queues = requests.get(f"{request.url_root}api/queue", headers=headers).json()
-#     chart = queues["chart_data"]
-#     del queues["chart_data"]
-#     return jsonify(chart_data=chart)
-
-
 app.register_api(api)
 
 auth = f"{AUTH_USER}:{AUTH_PASS}"

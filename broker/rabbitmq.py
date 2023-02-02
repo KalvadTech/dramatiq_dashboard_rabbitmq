@@ -99,12 +99,14 @@ class Rabbitmq:
         chart_delay_ready.append(all_msg_delay_ready)
         chart_delay_progress.append(all_msg_delay_progress)
         chart_dead.append(all_msg_dead)
+        # remove elements from the list if the exceed the time given
         if chart_current_ready.__len__() >= (conf.chart_time * 60 / 5):
             chart_current_ready.pop(0)
             chart_current_progress.pop(0)
             chart_delay_ready.pop(0)
             chart_delay_progress.pop(0)
             chart_dead.pop(0)
+
         chart_data = {
             "chart_current_ready": chart_current_ready,
             "chart_current_progress": chart_current_progress,

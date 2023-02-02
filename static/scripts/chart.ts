@@ -2,16 +2,8 @@ import { Chart, LineController, LineElement, CategoryScale, Tooltip, Legend, Poi
 
 Chart.register(LineController, LineElement, CategoryScale, Tooltip, Legend, PointElement, Filler, LinearScale);
 
-window.renderChart = async () => {
-    const headers = new Headers();
-    const auth = (document.getElementById("credentials") as HTMLInputElement).value;
-    headers.append('Authorization', `Basic ${auth}`);
-    const options = {
-        method: "GET",
-        headers: headers
-    };
-    const res = await fetch("/api/queue", options);
-    const chartData = (await res.json()).data.chart_data;
+window.renderChart = async (queueInfo) => {
+    const chartData = queueInfo.data.chart_data;
     const currentDataReady = chartData["chart_current_ready"];
     const currentDataProgress = chartData["chart_current_progress"];
     const delayedDataReady = chartData["chart_delay_ready"];
@@ -81,17 +73,9 @@ window.renderChart = async () => {
     });
 };
 
-window.chartUpdate = async () => {
+window.chartUpdate = async (queueInfo) => {
     if (window.myApp.myChart) {
-        const headers = new Headers();
-        const auth = (document.getElementById("credentials") as HTMLInputElement).value;
-        headers.append('Authorization', `Basic ${auth}`);
-        const options = {
-            method: "GET",
-            headers: headers
-        };
-        const res = await fetch("/api/queue", options);
-        const chartData = (await res.json()).data.chart_data;
+        const chartData = queueInfo.data.chart_data;
         const currentDataReady = chartData["chart_current_ready"];
         const currentDataProgress = chartData["chart_current_progress"];
         const delayedDataReady = chartData["chart_delay_ready"];

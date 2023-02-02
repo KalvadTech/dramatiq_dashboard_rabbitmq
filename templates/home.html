@@ -1,13 +1,14 @@
-{% extends 'base.html' %} {% block title %}Home{% endblock %} {% block content
-%}
+{% extends 'base.html' %} 
+{% block title %}Home{% endblock %} 
+{% block content %}
 <div class="row">
-  <div class="col-md-6">
+  <div class="col-md-12">
     <div class="card queue-card">
       <div class="card-body">
         <h5 class="card-title">All queue chart</h5>
         <div
           class="chart"
-          style="position: relative; min-height: 30vh; width: 100%"
+          style="position: relative; min-height: 60vh; width: 100%"
         >
           <canvas id="message-count-chart"></canvas>
         </div>
@@ -16,7 +17,9 @@
       </div>
     </div>
   </div>
-  <div class="col-md-6">
+</div>
+<div class="row mt-3">
+  <div class="col-md-12">
     <div class="card queue-card">
       <div class="card-body">
         <h5 class="card-title">Queue Details</h5>
@@ -29,13 +32,13 @@
               <th>Failed</th>
             </tr>
           </thead>
-          <tbody id="queue_stats_table" onload="window.queueData();">
+          <tbody id="queue_stats_table">
            
           </tbody>
         </table>
       </div>
     </div>
   </div>
-  <input type="hidden" name="credentials" id="credentials" value='{{credentials|tojson|safe}}'></input>
 </div>
+<input type="hidden" name="credentials" id="credentials" value='{{credentials|tojson|safe}}'></input>
 {% endblock %}

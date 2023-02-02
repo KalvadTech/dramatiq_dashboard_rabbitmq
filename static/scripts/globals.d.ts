@@ -10,8 +10,9 @@ declare global {
             myChart?: Chart,
         };
         refreshPage: () => void;
-        renderChart: () => void;
-        chartUpdate: () => void;
-        queueData: () => void;
+        renderChart: (queueInfo: any) => void;
+        chartUpdate: (queueInfo: any) => void;
+        queueData: (queueInfo: any) => void;
+        queueInfo: () => any;
     }
 }
