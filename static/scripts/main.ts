@@ -29,7 +29,7 @@ window.queueInfo = async () => {
 window.queueData = async (queueInfo) => {
   const queuesTbody = document.querySelector("#queue_stats_table");
   if (queuesTbody) queuesTbody.innerHTML = "";
-  Object.entries(queueInfo.data.list_of_queues).forEach((key, value) => {
+  Object.entries(queueInfo.data.list_of_queues).forEach((key) => {
     if (queuesTbody) queuesTbody.innerHTML += `            
             <tr>
             <td>
@@ -58,7 +58,6 @@ window.refreshPage = () => {
   if (!window.myApp.isHomePage) {
     // refreshes the page every 5 seconds
     window.myApp.refreshIntervalId = setInterval(async function () {
-      console.log("refreshed firted");
       const res = await fetch(window.location.href);
       const contentElement = document.querySelector("#dynamic-content");
       if (contentElement) {
@@ -68,8 +67,9 @@ window.refreshPage = () => {
   }
   else {
     window.myApp.refreshIntervalId = setInterval(async function () {
-      window.chartUpdate(await window.queueInfo());
-      window.queueData(await window.queueInfo());
+      const queueData: any = await window.queueInfo();
+      window.chartUpdate(queueData);
+      window.queueData(queueData);
     }, 5000);
   }
 };
@@ -79,10 +79,10 @@ window.refreshPage();
 
 if (window.myApp.isHomePage) {
   // Render home page
-  window.queueInfo()
-    .then((queueData: any) => {
-      window.renderChart(queueData);
-      window.queueData(queueData);
-    });
-
+  async function makePage() {
+    const queueData: any = await window.queueInfo();
+    window.renderChart(queueData);
+    window.queueData(queueData);
+  };
+  makePage();
 };

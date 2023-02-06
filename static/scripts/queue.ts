@@ -11,7 +11,7 @@ import Swal from 'sweetalert2';
         denyButtonText: `No`,
         background: window.myApp.elementBackground,
         color: window.myApp.elementColor,
-    }).then((result) => {
+    }).then(async (result) => {
         if (result.isConfirmed) {
             // Create a headers object and add the Authorization header
             const headers = new Headers();
@@ -21,26 +21,25 @@ import Swal from 'sweetalert2';
                 method: "DELETE",
                 headers: headers
             };
-            fetch("/api/queue/" + queue_name + '/message/' + message_id, options)
-                .then(response => {
-                    if (response.ok) {
-                        location.reload();
-                    } else {
-                        Swal.fire({
-                            icon: 'error', text: "There was an error deleting the message. Please try again.",
-                            background: window.myApp.elementBackground,
-                            color: window.myApp.elementColor,
-                        });
-                    }
-                })
-                .catch(error => {
-                    console.error("Error:", error);
+            try {
+                const res = await fetch("/api/queue/" + queue_name + '/message/' + message_id, options);
+                if (res.ok) {
+                    location.reload();
+                } else {
                     Swal.fire({
                         icon: 'error', text: "There was an error deleting the message. Please try again.",
                         background: window.myApp.elementBackground,
                         color: window.myApp.elementColor,
                     });
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                Swal.fire({
+                    icon: 'error', text: "There was an error deleting the message. Please try again.",
+                    background: window.myApp.elementBackground,
+                    color: window.myApp.elementColor,
                 });
+            }
         } else {
             window.refreshPage();
         }
@@ -58,7 +57,7 @@ import Swal from 'sweetalert2';
         denyButtonText: `No`,
         background: window.myApp.elementBackground,
         color: window.myApp.elementColor,
-    }).then((result) => {
+    }).then(async (result) => {
         if (result.isConfirmed) {
             // Create a headers object and add the Authorization header
             const headers = new Headers();
@@ -68,26 +67,25 @@ import Swal from 'sweetalert2';
                 method: "PUT",
                 headers: headers
             };
-            fetch("/api/queue/" + queue_name + '/message/' + message_id + '/requeue', options)
-                .then(response => {
-                    if (response.ok) {
-                        location.reload();
-                    } else {
-                        Swal.fire({
-                            icon: 'error', text: "There was an error requeueing deleting the message. Please try again.",
-                            background: window.myApp.elementBackground,
-                            color: window.myApp.elementColor,
-                        });
-                    }
-                })
-                .catch(error => {
-                    console.error("Error:", error);
+            try {
+                const res = await fetch("/api/queue/" + queue_name + '/message/' + message_id + '/requeue', options);
+                if (res.ok) {
+                    location.reload();
+                } else {
                     Swal.fire({
-                        icon: 'error', text: "There was an error requeueing deleting the message. Please try again.",
+                        icon: 'error', text: "There was an error requeueing the message. Please try again.",
                         background: window.myApp.elementBackground,
                         color: window.myApp.elementColor,
                     });
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                Swal.fire({
+                    icon: 'error', text: "There was an error requeueing the message. Please try again.",
+                    background: window.myApp.elementBackground,
+                    color: window.myApp.elementColor,
                 });
+            }
         } else {
             window.refreshPage();
         }
