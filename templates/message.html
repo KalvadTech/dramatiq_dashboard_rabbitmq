@@ -1,59 +1,63 @@
-{% extends 'base.html' %}
-
-{% block title %}Message: {{message.message_id}}{% endblock %}
-
+{% extends "base.html" %}
+{% block title %}
+    Message: {{ message.message_id }}
+{% endblock title %}
 {% block content %}
-<div class="container">
-    <h1>Message details</h1>
-    <table class="table">
-        <tbody>
-            <tr>
-                <th>message_id</th>     
-                <td>{{message.message_id}}</td>
-            </tr>
-            <tr>
-                <th>actor_name</th>
-                <td>{{message.actor_name}}</td>
-            </tr>
-            <tr>
-                <th>args</th>
-                <td>{{message.args}}</td>
-            </tr>
-            <tr>
-                <th>kwargs</th>
-                <td>{{message.kwargs}}</td>
-            </tr>
-            <tr>
-                <th>created_at</th>
-                <td>{{message.created_at}}</td>
-            </tr>
-            <tr>
-                <th>message_timestamp</th>
-                <td>{{message.message_timestamp}}</td>
-            </tr>
-            <tr>
-                <th>queue_name</th>
-                <td>{{message.queue_name}}</td>
-            </tr>
-            <tr>
-                <th>retries</th>
-                <td>{{message.retries}}</td>
-            </tr>
-            {% if message.traceback %}
-            <tr>
-                <th>traceback</th>
-                    <td>
-                        <pre class="code">
+    <div class="container">
+        <h1>Message details</h1>
+        <table class="table">
+            <tbody>
+                <tr>
+                    <th>message_id</th>
+                    <td>{{ message.message_id }}</td>
+                </tr>
+                <tr>
+                    <th>actor_name</th>
+                    <td>{{ message.actor_name }}</td>
+                </tr>
+                <tr>
+                    <th>args</th>
+                    <td>{{ message.args }}</td>
+                </tr>
+                <tr>
+                    <th>kwargs</th>
+                    <td>{{ message.kwargs }}</td>
+                </tr>
+                <tr>
+                    <th>created_at</th>
+                    <td>{{ message.created_at }}</td>
+                </tr>
+                <tr>
+                    <th>message_timestamp</th>
+                    <td>{{ message.message_timestamp }}</td>
+                </tr>
+                <tr>
+                    <th>queue_name</th>
+                    <td>{{ message.queue_name }}</td>
+                </tr>
+                <tr>
+                    <th>retries</th>
+                    <td>{{ message.retries }}</td>
+                </tr>
+                {% if message.traceback %}
+                    <tr>
+                        <th>traceback</th>
+                        <td>
+                            <pre class="code">
                             <code class="text-danger">{{message.traceback}}</code>
                         </pre>
-                    </td>  
-            </tr>
-            {% endif %}
-        </tbody>
-    </table>
-    <div class="text-right">
-        <button class="btn btn-danger" onclick="msg_delete('{{message.queue_name}}', '{{message.message_id}}')">Delete</button>
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+        <div class="text-right">
+            <button class="btn btn-danger"
+                    onclick="msg_delete('{{ queue_name }}', '{{ message.message_id }}')">Delete</button>
+        </div>
+        <input type="hidden"
+               name="credentials"
+               id="credentials"
+               value='{{ credentials|tojson|safe }}'/>
     </div>
-    <input type="hidden" name="credentials" id="credentials" value='{{credentials|tojson|safe}}'></input>
-</div>
-{% endblock %}
+{% endblock content %}
