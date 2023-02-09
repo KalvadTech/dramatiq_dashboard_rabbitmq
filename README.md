@@ -1,6 +1,6 @@
 # Dramatiq dashboard using RabbitMQ
 
-This project implements a dashboard for dramatiq when its running on RabbitMQ
+A Dramatiq dashboard that works with the RabbitMQ broker, which allows you to monitor the tasks in the queues, delete or requeue specific tasks, and view message details.
 
 ## Install
 
@@ -40,7 +40,10 @@ make prod
 | RABBITMQ\_HOST     | String  | Hostname or IP Address to connect to for rabbitmq connection | localhost     |
 | RABBITMQ\_PORT     | Integer | TCP port to connect to for rabbitmq connection               | 5672          |
 | DEBUG              | Boolean | Debug setting                                                | &nbsp;        |
+| AUTH\_USER         | String  | basic auth username                                          | &nbsp;        |
+| AUTH\_PASS         | String  | basic auth username                                          | &nbsp;        |
+| CHART\_TIME        | Integer | How many minutes should be shown in the chart                | 3             |
 
-# OpenAPI documentation
+## OpenAPI documentation
 
 To access openAPI documentation navigate to /openapi/ URL 

@@ -53,3 +53,24 @@ class Config:
         Returns the DEBUG
         """
         return os.environ.get("DEBUG", "false").lower() == "true"
+
+    @property
+    def auth_user(self):
+        """
+        Returns the AUTH_USER
+        """
+        return os.environ.get("AUTH_USER", "")
+
+    @property
+    def auth_pass(self):
+        """
+        Returns the AUTH_PASS
+        """
+        return os.environ.get("AUTH_PASS", "")
+
+    @property
+    def chart_time(self):
+        """
+        Returns the CHART_TIME
+        """
+        return int(os.environ.get("CHART_TIME", 3))

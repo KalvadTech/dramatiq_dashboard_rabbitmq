@@ -4,6 +4,15 @@ from dramatiq.common import dq_name, q_name, xq_name, current_millis
 import pika
 from loguru import logger
 import datetime
+import configuration.config as config
+
+conf = config.Config()
+
+chart_current_ready = []
+chart_current_progress = []
+chart_delay_ready = []
+chart_delay_progress = []
+chart_dead = []
 
 
 class Rabbitmq:
@@ -36,14 +45,16 @@ class Rabbitmq:
         )
 
     def get_all_queues(self):
-        """Get all of the queues on the specfic vhost
+        """Get all of the queues on the specific vhost
 
         Returns:
             dict: A dict that has the queue names and number of messages for each queue
         """
         dict_of_queues = {}
-        all_msg_current = 0
-        all_msg_delay = 0
+        all_msg_current_ready = 0
+        all_msg_current_progress = 0
+        all_msg_delay_ready = 0
+        all_msg_delay_progress = 0
         all_msg_dead = 0
         # The url used to get all queues which we send a get request to
         all_queue_url = f"{self.base_url}/queues/{self.vhost}"
@@ -52,7 +63,8 @@ class Rabbitmq:
         for queue in queues:
             if queue["name"] == q_name(queue["name"]):
                 # If the name is valid then increment the all_msg_current and get the delay queue and dead queue
-                all_msg_current += queue["messages"]
+                all_msg_current_ready += queue["messages_ready"]
+                all_msg_current_progress += queue["messages_unacknowledged"]
                 queue_name = queue["name"]
                 delay_queue_url = (
                     f"{self.base_url}/queues/{self.vhost}/{dq_name(queue_name)}"
@@ -65,22 +77,54 @@ class Rabbitmq:
                 dead_queue = requests.get(dead_queue_url, auth=self.auth).json()
 
                 # Update dict_of_queues to have the queue name and the number of messages for the current, delay, and dead queues
+                if "list_of_queues" not in dict_of_queues:
+                    dict_of_queues["list_of_queues"] = {}
+                dict_of_queues["list_of_queues"][queue["name"]] = {
+                    "current_message_count_ready": queue["messages_ready"],
+                    "current_message_count_progress": queue["messages_unacknowledged"],
+                    "delay_message_count_ready": delay_queue["messages_ready"],
+                    "delay_message_count_progress": delay_queue[
+                        "messages_unacknowledged"
+                    ],
+                    "dead_message_count": dead_queue["messages"],
+                }
 
-                dict_of_queues.update(
-                    {
-                        queue["name"]: {
-                            "current_message_count": queue["messages"],
-                            "delay_message_count": delay_queue["messages"],
-                            "dead_message_count": dead_queue["messages"],
-                        }
-                    }
-                )
-                all_msg_delay += delay_queue["messages"]
+                all_msg_delay_ready += delay_queue["messages_ready"]
+                all_msg_delay_progress += delay_queue["messages_unacknowledged"]
                 all_msg_dead += dead_queue["messages"]
 
         # Update the overall counters
-        dict_of_queues.update({"all_messages_in_queues": all_msg_current})
-        dict_of_queues.update({"all_messages_in_delay_queues": all_msg_delay})
+        chart_current_ready.append(all_msg_current_ready)
+        chart_current_progress.append(all_msg_current_progress)
+        chart_delay_ready.append(all_msg_delay_ready)
+        chart_delay_progress.append(all_msg_delay_progress)
+        chart_dead.append(all_msg_dead)
+        # remove elements from the list if the exceed the time given
+        if chart_current_ready.__len__() >= (conf.chart_time * 60 / 5):
+            chart_current_ready.pop(0)
+            chart_current_progress.pop(0)
+            chart_delay_ready.pop(0)
+            chart_delay_progress.pop(0)
+            chart_dead.pop(0)
+
+        chart_data = {
+            "chart_current_ready": chart_current_ready,
+            "chart_current_progress": chart_current_progress,
+            "chart_delay_ready": chart_delay_ready,
+            "chart_delay_progress": chart_delay_progress,
+            "chart_dead": chart_dead,
+        }
+        dict_of_queues.update({"chart_data": chart_data})
+        dict_of_queues.update({"all_messages_in_queues_ready": all_msg_current_ready})
+        dict_of_queues.update(
+            {"all_messages_in_queues_progress": all_msg_current_progress}
+        )
+        dict_of_queues.update(
+            {"all_messages_in_delay_queues_ready": all_msg_delay_ready}
+        )
+        dict_of_queues.update(
+            {"all_messages_in_delay_queues_progress": all_msg_delay_progress}
+        )
         dict_of_queues.update({"all_messages_in_dead_letter_queues": all_msg_dead})
 
         return dict_of_queues
@@ -107,14 +151,14 @@ class Rabbitmq:
         return queue
 
     def get_message_details(self, queue_name, message_id):
-        """Gets the details of a specfic message
+        """Gets the details of a specific message
 
         Args:
             queue_name (str): The name of the queue
             message_id (str): The id of the message as given by dramatiq
 
         Returns:
-            dict: the detail of the specfic message
+            dict: the detail of the specific message
         """
         # Get the messages in queue
         messages = self.get_queue(queue_name)
@@ -126,6 +170,14 @@ class Rabbitmq:
                 message_json["created_at"] = time_since_timestamp(
                     message_json["message_timestamp"]
                 )
+                message_timestamp = message_json["message_timestamp"]
+                message_date = datetime.datetime.fromtimestamp(
+                    message_json["message_timestamp"] / 1000
+                )
+                message_json[
+                    "message_timestamp"
+                ] = f"{message_timestamp} ({message_date.astimezone()})"
+
                 try:
                     message_json["retries"] = message_json["options"]["retries"]
                     message_json["traceback"] = message_json["options"]["traceback"]
@@ -146,7 +198,7 @@ class Rabbitmq:
             destination_queue (str): The queue to add the messages to
             message_id (str): The id of the message as given by dramatiq
         Returns:
-            dict: Msessage telling us that it finished processing
+            dict: Message telling us that it finished processing
         """
         # Connect to RabbitMQ server
         connection = pika.BlockingConnection(self.parameters)
@@ -197,7 +249,7 @@ class Rabbitmq:
             queue_name (str): The queue to remove the messages from
             message_id (str): The id of the message as given by dramatiq
         Returns:
-            Dict: Msessages telling us that it finished processing
+            Dict: Messages telling us that it finished processing
         """
         # Connect to RabbitMQ server
         connection = pika.BlockingConnection(self.parameters)
@@ -238,7 +290,7 @@ class Rabbitmq:
             list_of_msg (list): list of msg inside queue
 
         Returns:
-            current_queue_send (list): a formated list of msg inside queue
+            current_queue_send (list): a formatted list of msg inside queue
         """
         current_queue_send = []
         for msg in list_of_msg:
@@ -254,7 +306,7 @@ class Rabbitmq:
         return current_queue_send
 
     def get_queue(self, queue_name):
-        """Gets all the messages from a specfic queue
+        """Gets all the messages from a specific queue
 
         Args:
             queue_name (str): The name of the queue
@@ -275,15 +327,23 @@ class Rabbitmq:
 
 
 def time_since_timestamp(timestamp):
+    """Calculates the amount of time that has passed from a UNIX timestamp in milliseconds
+
+    Args:
+        timestamp (int): UNIX timestamp in milliseconds
+
+    Returns:
+        str: The amount of time that has passed since the timestamp's creation
+    """
     current_time = current_millis()
     time_diff = current_time - timestamp
     diff = datetime.timedelta(milliseconds=time_diff)
-    s = diff.seconds
-    if s <= 60:
-        return str(s) + "s ago"
-    elif s > 60 and s <= 3600:
-        return str(s // 60) + "m ago"
-    elif s > 3600 and s <= 86400:
-        return str(s // 3600) + "h ago"
-    elif s > 86400:
-        return str(s // 86400) + "d ago"
+    total_seconds = diff.total_seconds()
+    if total_seconds <= 60:
+        return str(int(total_seconds)) + "s ago"
+    elif total_seconds > 60 and total_seconds <= 3600:
+        return str(int(total_seconds // 60)) + "m ago"
+    elif total_seconds > 3600 and total_seconds <= 86400:
+        return str(int(total_seconds // 3600)) + "h ago"
+    elif total_seconds > 86400:
+        return str(int(total_seconds // 86400)) + "d ago"
