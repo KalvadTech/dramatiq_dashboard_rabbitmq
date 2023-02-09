@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="keywords" content="base,page"/>
+    <meta name="description" content="base page"/>
+    <title>
+      {% block title %}
+      {% endblock title %}
+    - Dramatiq dashboard</title>
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+    <!-- My CSS -->
+    {% assets "scss_all" %}
+      <link rel="stylesheet" href="{{ ASSET_URL }}" />
+    {% endassets %}
+  </head>
+  <body class="body" id="dynamic-content">
+    <header class="navbar mb-5">
+      <div class="container">
+        <a class="navbar-brand" href="/">Dramatiq Dashboard</a>
+      </div>
+    </header>
+    <div class="container">
+      <main>
+        {% block content %}
+        {% endblock content %}
+      </main>
+    </div>
+    <!-- Bootstrap JavaScript Bundle -->
+    {% assets "ts_all" %}
+      <script src="{{ ASSET_URL }}"></script>
+    {% endassets %}
+  </body>
+</html>

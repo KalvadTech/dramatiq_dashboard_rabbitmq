@@ -1,0 +1,116 @@
+$primary: #a6ece0;
+$secondary: #031d44;
+$danger: #cf5c36;
+$tertiary: #544b3d;
+$enable-rounded: true;
+$background-color: #333;
+$color: #cccccc;
+$box-shadow: 0 0.5rem 1rem rgba($color, 0.15);
+$link-color: #1f499e;
+
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;500&family=Roboto:wght@300;400;500&display=swap");
+@import "node_modules/bootstrap/scss/bootstrap";
+@import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css");
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: "Poppins";
+    font-weight: bold;
+}
+
+.body {
+    background-color: $background-color;
+    font-family: "Roboto";
+    color: $color;
+}
+
+.queue-card {
+    @extend .card;
+    background-color: $background-color;
+    border-color: $primary;
+    transition: ease-in-out 200ms all;
+    box-shadow: $box-shadow;
+    border-radius: $border-radius;
+
+    &:hover {
+        background-color: #292929;
+    }
+
+    .card-title {
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+
+    .card-text {
+        font-size: 1.2rem;
+        margin-bottom: 1rem;
+    }
+}
+
+.table {
+    color: $color;
+    transition: ease-in-out 200ms all;
+
+    a {
+        font-weight: bold;
+        color: $color;
+        transition: ease-in-out 200ms all;
+
+        &:hover {
+            text-decoration: underline;
+            color: $link-color;
+        }
+    }
+}
+
+.navbar {
+    background-color: #404040;
+    @extend .nav;
+    @extend .navbar-light;
+
+    a {
+        transition: ease-in-out 200ms all;
+        color: $color;
+
+        &:hover {
+            text-decoration: none;
+            color: $link-color;
+            background-color: $primary;
+            padding: 0.3rem 1rem;
+            border-radius: 1rem;
+        }
+    }
+}
+
+.btn-group {
+    @extend .btn-group;
+
+    a {
+        &.active {
+            transform: scale(1.1);
+            font-weight: bold;
+            border-radius: $border-radius !important;
+            z-index: 2 !important;
+        }
+
+        &:not(.active) {
+            filter: grayscale(1);
+        }
+    }
+}
+
+.code {
+    background-color: #292929;
+}
+
+.chart {
+    border-radius: $border-radius;
+}
+
+.text-progress {
+    color: #2a9d8f;
+}
