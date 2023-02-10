@@ -1,9 +1,8 @@
-import requests
 import json
+import datetime
+import requests
 from dramatiq.common import dq_name, q_name, xq_name, current_millis
 import pika
-from loguru import logger
-import datetime
 import configuration.config as config
 
 conf = config.Config()
@@ -16,6 +15,11 @@ chart_dead = []
 
 
 class Rabbitmq:
+    """
+    A class that interfaces with the RabbitMQ api to allow us to
+    get, delete, and requeue messages
+    """
+
     def __init__(
         self,
         rabbitmq_api_url,
@@ -58,11 +62,12 @@ class Rabbitmq:
         all_msg_dead = 0
         # The url used to get all queues which we send a get request to
         all_queue_url = f"{self.base_url}/queues/{self.vhost}"
-        queues = requests.get(all_queue_url, auth=self.auth).json()
+        queues = requests.get(all_queue_url, auth=self.auth, timeout=10).json()
         # For all of the queues check if the queue has a valid queue name for dramatiq
         for queue in queues:
             if queue["name"] == q_name(queue["name"]):
-                # If the name is valid then increment the all_msg_current and get the delay queue and dead queue
+                # If the name is valid then increment the all_msg_current and
+                # get the delay queue and dead queue
                 all_msg_current_ready += queue["messages_ready"]
                 all_msg_current_progress += queue["messages_unacknowledged"]
                 queue_name = queue["name"]
@@ -73,10 +78,15 @@ class Rabbitmq:
                     f"{self.base_url}/queues/{self.vhost}/{xq_name(queue_name)}"
                 )
 
-                delay_queue = requests.get(delay_queue_url, auth=self.auth).json()
-                dead_queue = requests.get(dead_queue_url, auth=self.auth).json()
+                delay_queue = requests.get(
+                    delay_queue_url, auth=self.auth, timeout=10
+                ).json()
+                dead_queue = requests.get(
+                    dead_queue_url, auth=self.auth, timeout=10
+                ).json()
 
-                # Update dict_of_queues to have the queue name and the number of messages for the current, delay, and dead queues
+                # Update dict_of_queues to have the queue name
+                # and the number of messages for the current, delay, and dead queues
                 if "list_of_queues" not in dict_of_queues:
                     dict_of_queues["list_of_queues"] = {}
                 dict_of_queues["list_of_queues"][queue["name"]] = {
@@ -100,7 +110,7 @@ class Rabbitmq:
         chart_delay_progress.append(all_msg_delay_progress)
         chart_dead.append(all_msg_dead)
         # remove elements from the list if the exceed the time given
-        if chart_current_ready.__len__() >= (conf.chart_time * 60 / 5):
+        if len(chart_current_ready) >= (conf.chart_time * 60 / 5):
             chart_current_ready.pop(0)
             chart_current_progress.pop(0)
             chart_delay_ready.pop(0)
@@ -216,9 +226,11 @@ class Rabbitmq:
             # Get a message from the source queue
             method_frame, header_frame, body = channel.basic_get(source_queue)
             body_json = json.loads(body)
-            # If the body has the same message_id as the given id then move it to the destination_queue
+            # If the body has the same message_id as
+            # the given id then move it to the destination_queue
             if body_json["message_id"] == message_id:
-                # Change queue name to destination_queue, and eta to current UNIX time and returns it to the body
+                # Change queue name to destination_queue,
+                # and eta to current UNIX time and returns it to the body
                 body_json["queue_name"] = destination_queue
                 body_json["options"]["eta"] = current_millis()
                 body = json.dumps(body_json)
@@ -322,7 +334,7 @@ class Rabbitmq:
                 "encoding": "auto",
             }
         )
-        response = requests.post(url, auth=self.auth, data=payload).json()
+        response = requests.post(url, auth=self.auth, data=payload, timeout=10).json()
         return response
 
 

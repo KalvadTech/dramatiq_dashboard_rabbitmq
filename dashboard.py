@@ -1,13 +1,15 @@
+import base64
 from flask import render_template, request, redirect, jsonify
 import requests
-from broker.rabbitmq import Rabbitmq
 from dramatiq.common import dq_name, q_name, xq_name
-import configuration.config as config
 from flask_openapi3 import Info, Tag
 from flask_openapi3 import OpenAPI, APIBlueprint
 from pydantic import BaseModel, Field
-from loguru import logger
-import base64
+from flask_assets import Bundle, Environment
+from webassets.filter import ExternalTool
+from broker.rabbitmq import Rabbitmq
+import configuration.config as config
+
 
 conf = config.Config()
 
@@ -15,8 +17,6 @@ info = Info(title="dramatiq dashboard API documentation", version="1.0.0")
 app = OpenAPI(__name__, info=info)
 
 # === fancy assets
-from flask_assets import Bundle, Environment
-from webassets.filter import ExternalTool
 
 app.config["ASSETS_DEBUG"] = conf.debug
 assets = Environment(app)
@@ -26,9 +26,11 @@ assets.register("scss_all", scss_all)
 
 
 class Rollup(ExternalTool):
+    """bundles the typescript and the used npm libraries so that they can be used"""
+
     max_debug_level = None
 
-    def input(self, infile, outfile, **kwargs):
+    def input(self, infile, out, **kwargs):
         args = ["node_modules/.bin/rollup"]
         args.append("--format=iife")
         args.append(
@@ -36,7 +38,7 @@ class Rollup(ExternalTool):
         )
         args.append("-m=inline")
         args.append(kwargs["source_path"])
-        self.subprocess(args, outfile, infile)
+        self.subprocess(args, out, infile)
 
 
 ts_all = Bundle(
@@ -74,7 +76,7 @@ broker = Rabbitmq(
 )
 
 
-class QueuesInDetail(BaseModel):
+class QueuesInDetail(BaseModel):  # pylint: disable
     current_message_count: int = Field(
         0, description="current message count for this queue"
     )
@@ -146,16 +148,16 @@ class StatusResponse(BaseModel):
     status: str = Field(description="The status of the operation")
 
 
-def check_basic_auth(request):
+def check_basic_auth(current_request):
     """Decodes the user name and password that were given and checks if they are correct
 
     Args:
-        request: The current request
+        current_request: The current request
 
     Returns:
         Authorization
     """
-    encoded_credentials = request.headers.get("Authorization").split()[-1]
+    encoded_credentials = current_request.headers.get("Authorization").split()[-1]
 
     # decode the encoded credentials
     decoded_credentials = base64.b64decode(encoded_credentials).decode().split(":")
@@ -163,9 +165,9 @@ def check_basic_auth(request):
     password = decoded_credentials[1]
 
     if username == "mouhand" and password == "mouhand":
-        return "Authentication succeeded", 200
+        return 200
     else:
-        return "Authentication failed", 401
+        return 401
 
 
 @api.get("/")
@@ -181,7 +183,7 @@ def api_main_page():
     responses={"200": QueueResponse},
 )
 def api_queues():
-    status, code = check_basic_auth(request)
+    code = check_basic_auth(request)
     if code == 200:
         return jsonify(data=broker.get_all_queues()), 200
     else:
@@ -200,7 +202,7 @@ def api_messages_of_queue(path: QueuePath):
         path.queue_name
     ):
         return {"Status": "Please enter the current queue name"}
-    status, code = check_basic_auth(request)
+    code = check_basic_auth(request)
     if code == 200:
         return broker.get_messages_of_queue(path.queue_name), 200
     else:
@@ -215,7 +217,7 @@ def api_messages_of_queue(path: QueuePath):
     responses={"200": MessageResponse},
 )
 def api_msg_details(path: MessagePath):
-    status, code = check_basic_auth(request)
+    code = check_basic_auth(request)
     if code == 200:
         return broker.get_message_details(path.queue_name, path.message_id), 200
     else:
@@ -232,7 +234,7 @@ def api_msg_details(path: MessagePath):
 def api_requeue_msg(path: MessagePath):
     if path.queue_name == q_name(path.queue_name):
         return {"Status": "Please enter a delay or dead queue name"}
-    status, code = check_basic_auth(request)
+    code = check_basic_auth(request)
     if code == 200:
         return (
             broker.requeue_msg(
@@ -252,7 +254,7 @@ def api_requeue_msg(path: MessagePath):
     responses={"200": StatusResponse},
 )
 def api_msg_delete(path: MessagePath):
-    status, code = check_basic_auth(request)
+    code = check_basic_auth(request)
     if code == 200:
         return broker.delete_msg(path.queue_name, path.message_id), 200
     else:
@@ -272,7 +274,9 @@ headers = {"Authorization": "Basic " + credentials}
 @app.route("/queue")
 def all_queues():
     try:
-        queues = requests.get(f"{request.url_root}api/queue", headers=headers).json()
+        queues = requests.get(
+            f"{request.url_root}api/queue", headers=headers, timeout=10
+        ).json()
     except requests.exceptions.JSONDecodeError:
         return "<p>please enter Environment variables and basic auth credentials correctly</p>"
     del queues["data"]["chart_data"]
@@ -282,9 +286,9 @@ def all_queues():
 @app.route("/queue/<queue_name>")
 @app.route("/queue/<queue_name>/current")
 def current_details(queue_name):
-    requests.get(f"{request.url_root}api/queue", headers=headers)
+    requests.get(f"{request.url_root}api/queue", headers=headers, timeout=10)
     queues = requests.get(
-        f"{request.url_root}api/queue/{queue_name}", headers=headers
+        f"{request.url_root}api/queue/{queue_name}", headers=headers, timeout=10
     ).json()
     return render_template(
         "queue.html",
@@ -299,9 +303,9 @@ def current_details(queue_name):
 
 @app.route("/queue/<queue_name>/delayed")
 def delayed_details(queue_name):
-    requests.get(f"{request.url_root}api/queue", headers=headers)
+    requests.get(f"{request.url_root}api/queue", headers=headers, timeout=10)
     queues = requests.get(
-        f"{request.url_root}api/queue/{queue_name}", headers=headers
+        f"{request.url_root}api/queue/{queue_name}", headers=headers, timeout=10
     ).json()
     return render_template(
         "queue.html",
@@ -316,9 +320,9 @@ def delayed_details(queue_name):
 
 @app.route("/queue/<queue_name>/failed")
 def failed_details(queue_name):
-    requests.get(f"{request.url_root}api/queue", headers=headers)
+    requests.get(f"{request.url_root}api/queue", headers=headers, timeout=10)
     queues = requests.get(
-        f"{request.url_root}api/queue/{queue_name}", headers=headers
+        f"{request.url_root}api/queue/{queue_name}", headers=headers, timeout=10
     ).json()
     return render_template(
         "queue.html",
@@ -335,13 +339,14 @@ def failed_details(queue_name):
 # test
 @app.route("/queue/<queue_name>/message/<message_id>")
 def msg_details(queue_name, message_id):
-    requests.get(f"{request.url_root}api/queue", headers=headers)
+    requests.get(f"{request.url_root}api/queue", headers=headers, timeout=10)
     message = requests.get(
         f"{request.url_root}api/queue/{queue_name}/message/{message_id}",
         headers=headers,
+        timeout=10,
     ).json()
     try:
-        if message["status"] != None:
+        if message["status"] is not None:
             return redirect(
                 f"{request.url_root}queue/{q_name(queue_name)}/current", code=302
             )
