@@ -41,7 +41,7 @@ make prod
 | RABBITMQ\_PORT     | Integer | TCP port to connect to for rabbitmq connection               | 5672          |
 | DEBUG              | Boolean | Debug setting                                                | &nbsp;        |
 | AUTH\_USER         | String  | basic auth username                                          | &nbsp;        |
-| AUTH\_PASS         | String  | basic auth username                                          | &nbsp;        |
+| AUTH\_PASS         | String  | basic auth password                                          | &nbsp;        |
 | CHART\_TIME        | Integer | How many minutes should be shown in the chart                | 3             |
 
 ## OpenAPI documentation
