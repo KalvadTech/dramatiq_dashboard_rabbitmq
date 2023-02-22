@@ -117,7 +117,7 @@ def verify_password(username, password):
         str: the username
     """
     if BASIC_AUTH:
-        if username in users and check_password_hash(users.get(username), password):
+        if username in users and check_password_hash(users.get(username), password):  # type: ignore
             return username
 
 
