@@ -1,5 +1,8 @@
+"""import module"""
 import base64
 from flask import render_template, request, redirect, jsonify
+from flask_httpauth import HTTPBasicAuth
+from werkzeug.security import generate_password_hash, check_password_hash
 import requests
 from dramatiq.common import dq_name, q_name, xq_name
 from flask_openapi3 import Info, Tag
@@ -15,6 +18,10 @@ conf = config.Config()
 
 info = Info(title="dramatiq dashboard API documentation", version="1.0.0")
 app = OpenAPI(__name__, info=info)
+auth = HTTPBasicAuth()
+
+users = {"mouhand@kalvad.com": generate_password_hash("mouhand")}
+
 
 # === fancy assets
 
@@ -148,26 +155,10 @@ class StatusResponse(BaseModel):
     status: str = Field(description="The status of the operation")
 
 
-def check_basic_auth(current_request):
-    """Decodes the user name and password that were given and checks if they are correct
-
-    Args:
-        current_request: The current request
-
-    Returns:
-        Authorization
-    """
-    encoded_credentials = current_request.headers.get("Authorization").split()[-1]
-
-    # decode the encoded credentials
-    decoded_credentials = base64.b64decode(encoded_credentials).decode().split(":")
-    username = decoded_credentials[0]
-    password = decoded_credentials[1]
-
-    if username == "mouhand" and password == "mouhand":
-        return 200
-    else:
-        return 401
+@auth.verify_password
+def verify_password(username, password):
+    if username in users and check_password_hash(users.get(username), password):
+        return username
 
 
 @api.get("/")
@@ -182,12 +173,9 @@ def api_main_page():
     description="Gets the number of messages in all queues",
     responses={"200": QueueResponse},
 )
+@auth.login_required
 def api_queues():
-    code = check_basic_auth(request)
-    if code == 200:
-        return jsonify(data=broker.get_all_queues()), 200
-    else:
-        return "Authentication failed", 401
+    return jsonify(data=broker.get_all_queues()), 200
 
 
 @api.get(
@@ -197,16 +185,13 @@ def api_queues():
     description="Gets the messages in a Specific queue, like http://localhost:5000/api/queue/default",
     responses={"200": QueueDetailResponse},
 )
+@auth.login_required
 def api_messages_of_queue(path: QueuePath):
     if path.queue_name == dq_name(path.queue_name) or path.queue_name == xq_name(
         path.queue_name
     ):
         return {"Status": "Please enter the current queue name"}
-    code = check_basic_auth(request)
-    if code == 200:
-        return broker.get_messages_of_queue(path.queue_name), 200
-    else:
-        return "Authentication failed", 401
+    broker.get_messages_of_queue(path.queue_name)
 
 
 @api.get(
@@ -216,12 +201,9 @@ def api_messages_of_queue(path: QueuePath):
     description="Gets the message from a Specific queue, like http://localhost:5000/api/queue/default/message/9951e7f5-a163-4ec0-99f3-07b593239fda",
     responses={"200": MessageResponse},
 )
+@auth.login_required
 def api_msg_details(path: MessagePath):
-    code = check_basic_auth(request)
-    if code == 200:
-        return broker.get_message_details(path.queue_name, path.message_id), 200
-    else:
-        return "Authentication failed", 401
+    return broker.get_message_details(path.queue_name, path.message_id)
 
 
 @api.put(
@@ -231,19 +213,14 @@ def api_msg_details(path: MessagePath):
     description="Moves a message from a dead or delay queue to the current queue, like http://localhost:5000/api/queue/default.DQ/message/9951e7f5-a163-4ec0-99f3-07b593239fda",
     responses={"200": StatusResponse},
 )
+@auth.login_required
 def api_requeue_msg(path: MessagePath):
     if path.queue_name == q_name(path.queue_name):
         return {"Status": "Please enter a delay or dead queue name"}
-    code = check_basic_auth(request)
-    if code == 200:
-        return (
-            broker.requeue_msg(
-                path.queue_name, q_name(path.queue_name), path.message_id
-            ),
-            200,
-        )
-    else:
-        return "Authentication failed", 401
+
+    return (
+        broker.requeue_msg(path.queue_name, q_name(path.queue_name), path.message_id),
+    )
 
 
 @api.delete(
@@ -253,18 +230,15 @@ def api_requeue_msg(path: MessagePath):
     description="Deletes a message from a queue, like http://localhost:5000/api/queue/default.XQ/message/9951e7f5-a163-4ec0-99f3-07b593239fda",
     responses={"200": StatusResponse},
 )
+@auth.login_required
 def api_msg_delete(path: MessagePath):
-    code = check_basic_auth(request)
-    if code == 200:
-        return broker.delete_msg(path.queue_name, path.message_id), 200
-    else:
-        return "Authentication failed", 401
+    return broker.delete_msg(path.queue_name, path.message_id), 200
 
 
 app.register_api(api)
 
-auth = f"{AUTH_USER}:{AUTH_PASS}"
-credentials = base64.b64encode(bytes(auth, "utf-8")).decode()
+auth_send = f"{AUTH_USER}:{AUTH_PASS}"
+credentials = base64.b64encode(bytes(auth_send, "utf-8")).decode()
 
 # create a headers object with the encoded credentials
 headers = {"Authorization": "Basic " + credentials}
@@ -336,7 +310,6 @@ def failed_details(queue_name):
     )
 
 
-# test
 @app.route("/queue/<queue_name>/message/<message_id>")
 def msg_details(queue_name, message_id):
     requests.get(f"{request.url_root}api/queue", headers=headers, timeout=10)
