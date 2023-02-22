@@ -140,7 +140,7 @@ def api_queues():
     Returns:
         _type_: _description_
     """
-    return jsonify(data=broker.get_all_queues()), 200
+    return jsonify(data=broker.get_all_queues())
 
 
 @api.get(
@@ -199,9 +199,7 @@ def api_requeue_msg(path: MessagePath):
     if path.queue_name == q_name(path.queue_name):
         return {"Status": "Please enter a delay or dead queue name"}
 
-    return (
-        broker.requeue_msg(path.queue_name, q_name(path.queue_name), path.message_id),
-    )
+    return broker.requeue_msg(path.queue_name, q_name(path.queue_name), path.message_id)
 
 
 @api.delete(
@@ -218,7 +216,7 @@ def api_msg_delete(path: MessagePath):
     Args:
         path (MessagePath): MessagePath
     """
-    return broker.delete_msg(path.queue_name, path.message_id), 200
+    return broker.delete_msg(path.queue_name, path.message_id)
 
 
 app.register_api(api)
