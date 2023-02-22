@@ -10,7 +10,6 @@ from flask_openapi3 import OpenAPI, APIBlueprint
 from flask_assets import Bundle, Environment
 from webassets.filter import ExternalTool
 from broker.rabbitmq import Rabbitmq
-import configuration.config as config
 from broker.module import (
     QueueResponse,
     MessagePath,
@@ -19,6 +18,8 @@ from broker.module import (
     QueueDetailResponse,
     QueuePath,
 )
+from configuration import config
+
 
 conf = config.Config()
 
@@ -31,24 +32,24 @@ RABBITMQ_HOST = conf.host
 RABBITMQ_PORT = conf.port
 AUTH_USER = conf.auth_user
 AUTH_PASS = conf.auth_pass
-basic_auth = False
 
 info = Info(title="dramatiq dashboard API documentation", version="1.0.0")
 app = OpenAPI(__name__, info=info)
 auth = HTTPBasicAuth()
 
 if AUTH_USER and AUTH_PASS:
-    basic_auth = True
+    BASIC_AUTH = True
     users = {AUTH_USER: generate_password_hash(AUTH_PASS)}
 
-    auth_send = f"{AUTH_USER}:{AUTH_PASS}"
-    credentials = base64.b64encode(bytes(auth_send, "utf-8")).decode()
+    AUTH_SEND = f"{AUTH_USER}:{AUTH_PASS}"
+    credentials = base64.b64encode(bytes(AUTH_SEND, "utf-8")).decode()
 
     # create a headers object with the encoded credentials
     headers = {"Authorization": "Basic " + credentials}
 else:
-    auth_send = ""
-    credentials = base64.b64encode(bytes(auth_send, "utf-8")).decode()
+    BASIC_AUTH = False
+    AUTH_SEND = ""
+    credentials = base64.b64encode(bytes(AUTH_SEND, "utf-8")).decode()
 
     # create a headers object with the encoded credentials
     headers = {"Authorization": "Basic " + credentials}
@@ -106,7 +107,16 @@ broker = Rabbitmq(
 
 @auth.verify_password
 def verify_password(username, password):
-    if basic_auth:
+    """verifies that the password and username
+
+    Args:
+        username (str): username
+        password (str): password
+
+    Returns:
+        str: the username
+    """
+    if BASIC_AUTH:
         if username in users and check_password_hash(users.get(username), password):
             return username
 
@@ -123,8 +133,13 @@ def api_main_page():
     description="Gets the number of messages in all queues",
     responses={"200": QueueResponse},
 )
-@auth.login_required(optional=not basic_auth)
+@auth.login_required(optional=not BASIC_AUTH)
 def api_queues():
+    """gets the data on all the queues
+
+    Returns:
+        _type_: _description_
+    """
     return jsonify(data=broker.get_all_queues()), 200
 
 
@@ -135,8 +150,13 @@ def api_queues():
     description="Gets the messages in a Specific queue, like http://localhost:5000/api/queue/default",
     responses={"200": QueueDetailResponse},
 )
-@auth.login_required(optional=not basic_auth)
+@auth.login_required(optional=not BASIC_AUTH)
 def api_messages_of_queue(path: QueuePath):
+    """gets all the messages inside the queue
+
+    Args:
+        path (QueuePath): the QueuePath
+    """
     if path.queue_name == dq_name(path.queue_name) or path.queue_name == xq_name(
         path.queue_name
     ):
@@ -151,8 +171,14 @@ def api_messages_of_queue(path: QueuePath):
     description="Gets the message from a Specific queue, like http://localhost:5000/api/queue/default/message/9951e7f5-a163-4ec0-99f3-07b593239fda",
     responses={"200": MessageResponse},
 )
-@auth.login_required(optional=not basic_auth)
+@auth.login_required(optional=not BASIC_AUTH)
 def api_msg_details(path: MessagePath):
+    """gets the details of the message inside the queue
+
+    Args:
+        path (MessagePath): MessagePath
+
+    """
     return broker.get_message_details(path.queue_name, path.message_id)
 
 
@@ -163,8 +189,13 @@ def api_msg_details(path: MessagePath):
     description="Moves a message from a dead or delay queue to the current queue, like http://localhost:5000/api/queue/default.DQ/message/9951e7f5-a163-4ec0-99f3-07b593239fda",
     responses={"200": StatusResponse},
 )
-@auth.login_required(optional=not basic_auth)
+@auth.login_required(optional=not BASIC_AUTH)
 def api_requeue_msg(path: MessagePath):
+    """requeue the message into the current queue
+
+    Args:
+        path (MessagePath): the MessagePath
+    """
     if path.queue_name == q_name(path.queue_name):
         return {"Status": "Please enter a delay or dead queue name"}
 
@@ -180,8 +211,13 @@ def api_requeue_msg(path: MessagePath):
     description="Deletes a message from a queue, like http://localhost:5000/api/queue/default.XQ/message/9951e7f5-a163-4ec0-99f3-07b593239fda",
     responses={"200": StatusResponse},
 )
-@auth.login_required(optional=not basic_auth)
+@auth.login_required(optional=not BASIC_AUTH)
 def api_msg_delete(path: MessagePath):
+    """Deletes the message of the queue
+
+    Args:
+        path (MessagePath): MessagePath
+    """
     return broker.delete_msg(path.queue_name, path.message_id), 200
 
 
@@ -190,7 +226,7 @@ app.register_api(api)
 
 @app.route("/")
 @app.route("/queue")
-@auth.login_required(optional=not basic_auth)
+@auth.login_required(optional=not BASIC_AUTH)
 def all_queues():
     try:
         queues = requests.get(
@@ -204,7 +240,7 @@ def all_queues():
 
 @app.route("/queue/<queue_name>")
 @app.route("/queue/<queue_name>/current")
-@auth.login_required(optional=not basic_auth)
+@auth.login_required(optional=not BASIC_AUTH)
 def current_details(queue_name):
     requests.get(f"{request.url_root}api/queue", headers=headers, timeout=10)
     queues = requests.get(
@@ -222,7 +258,7 @@ def current_details(queue_name):
 
 
 @app.route("/queue/<queue_name>/delayed")
-@auth.login_required(optional=not basic_auth)
+@auth.login_required(optional=not BASIC_AUTH)
 def delayed_details(queue_name):
     requests.get(f"{request.url_root}api/queue", headers=headers, timeout=10)
     queues = requests.get(
@@ -240,7 +276,7 @@ def delayed_details(queue_name):
 
 
 @app.route("/queue/<queue_name>/failed")
-@auth.login_required(optional=not basic_auth)
+@auth.login_required(optional=not BASIC_AUTH)
 def failed_details(queue_name):
     requests.get(f"{request.url_root}api/queue", headers=headers, timeout=10)
     queues = requests.get(
@@ -259,7 +295,7 @@ def failed_details(queue_name):
 
 
 @app.route("/queue/<queue_name>/message/<message_id>")
-@auth.login_required(optional=not basic_auth)
+@auth.login_required(optional=not BASIC_AUTH)
 def msg_details(queue_name, message_id):
     requests.get(f"{request.url_root}api/queue", headers=headers, timeout=10)
     message = requests.get(
