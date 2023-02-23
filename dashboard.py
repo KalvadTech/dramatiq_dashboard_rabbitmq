@@ -233,7 +233,9 @@ def all_queues():
     except requests.exceptions.JSONDecodeError:
         return "<p>please enter Environment variables and basic auth credentials correctly</p>"
     del queues["data"]["chart_data"]
-    return render_template("home.html", queues=queues["data"], credentials=credentials)
+    return render_template(
+        "home.html", queues=queues["data"], credentials=credentials, min=conf.chart_time
+    )
 
 
 @app.route("/queue/<queue_name>")

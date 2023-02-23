@@ -96,7 +96,7 @@ window.chartUpdate = async (queueInfo) => {
             backgroundColor: 'rgba(25, 135, 84, 1)',
             borderWidth: 1
         }, {
-            label: 'Current(in progress)',
+            label: 'Current(unacked)',
             data: currentDataProgress,
             borderColor: 'rgba(42, 157, 143, 1)',
             backgroundColor: 'rgba(42, 157, 143, 1)',
@@ -108,7 +108,7 @@ window.chartUpdate = async (queueInfo) => {
             backgroundColor: 'rgba(255, 193, 7, 1)',
             borderWidth: 1
         }, {
-            label: 'Delayed(in progress)',
+            label: 'Delayed(unacked)',
             data: delayedDataProgress,
             borderColor: 'rgba(211, 84, 0, 1)',
             backgroundColor: 'rgba(211, 84, 0, 1)',

@@ -10,5 +10,8 @@
     "sweetalert2": "11.7.2",
     "tslib": "2.5.0",
     "typescript": "4.9.5"
+  },
+  "dependencies": {
+    "rollup": "3.17.2"
   }
 }
