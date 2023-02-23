@@ -10,7 +10,7 @@ from flask_openapi3 import OpenAPI, APIBlueprint
 from flask_assets import Bundle, Environment
 from webassets.filter import ExternalTool
 from broker.rabbitmq import Rabbitmq
-from broker.module import (
+from broker.models import (
     QueueResponse,
     MessagePath,
     MessageResponse,
