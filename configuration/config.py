@@ -59,14 +59,14 @@ class Config:
         """
         Returns the AUTH_USER
         """
-        return os.environ.get("AUTH_USER", "")
+        return os.environ.get("AUTH_USER", None)
 
     @property
     def auth_pass(self):
         """
         Returns the AUTH_PASS
         """
-        return os.environ.get("AUTH_PASS", "")
+        return os.environ.get("AUTH_PASS", None)
 
     @property
     def chart_time(self):

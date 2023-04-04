@@ -1,14 +1,17 @@
 {
   "devDependencies": {
-    "@rollup/plugin-commonjs": "24.0.0",
+    "@rollup/plugin-commonjs": "24.0.1",
     "@rollup/plugin-node-resolve": "15.0.1",
     "@rollup/plugin-typescript": "11.0.0",
     "@types/bootstrap": "5.2.6",
     "bootstrap": "5.2.3",
     "bootstrap-icons": "1.10.3",
-    "chart.js": "4.2.0",
-    "sweetalert2": "11.7.0",
-    "tslib": "2.4.1",
-    "typescript": "4.9.4"
+    "chart.js": "4.2.1",
+    "sweetalert2": "11.7.2",
+    "tslib": "2.5.0",
+    "typescript": "4.9.5"
+  },
+  "dependencies": {
+    "rollup": "3.17.2"
   }
 }

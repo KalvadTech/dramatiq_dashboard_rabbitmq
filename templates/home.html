@@ -7,14 +7,13 @@
     <div class="col-md-12">
       <div class="card queue-card">
         <div class="card-body">
-          <h5 class="card-title">All queue chart</h5>
+          <h5 class="card-title text-center">The overall number of messages in all queues for the last {{ min }} minutes</h5>
           <div class="chart"
                style="position: relative;
                       min-height: 60vh;
                       width: 100%">
             <canvas id="message-count-chart"></canvas>
           </div>
-          <h5 class="card-title mt-3">All queue Stats</h5>
           <div id="queue_stats"></div>
         </div>
       </div>
@@ -29,9 +28,10 @@
             <thead>
               <tr>
                 <th>Queue</th>
-                <th>Current(work in progress)</th>
-                <th>Delayed(work in progress)</th>
+                <th>Current(unacked)</th>
+                <th>Delayed(unacked)</th>
                 <th>Failed</th>
+                <th>Info</th>
               </tr>
             </thead>
             <tbody id="queue_stats_table">

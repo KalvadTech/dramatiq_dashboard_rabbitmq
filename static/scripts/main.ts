@@ -49,6 +49,14 @@ window.queueData = async (queueInfo) => {
               </span>
             </td>
                   <td class="text-danger"><span id="dead_message_count">${key[1].dead_message_count}</span></td>
+            <td>
+            <button type="button" class="btn border">
+            <a
+                href="${window.location.href}queue/${key[0]}/current"
+                >
+            <i class="bi bi-info"></i></a>
+              </button>
+            </td>
           </tr>`;
   });
 };
